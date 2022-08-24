@@ -38,7 +38,7 @@ MODULE aed_lighting
 !-------------------------------------------------------------------------------
    USE aed_core, ONLY : aed_model_data_t
 
-!  USE aed_light
+   USE aed_light
    USE aed_atmosphere
    USE aed_oasim
 
@@ -48,7 +48,7 @@ MODULE aed_lighting
 
    PRIVATE   !# By default make everything private
 
-   PUBLIC aed_new_lighting_model, aed_print_lighting_version
+   PUBLIC aed_new_lgt_model, aed_print_lgt_version
 
    !#---------------------------------------------------------------------------
 
@@ -58,7 +58,7 @@ CONTAINS
 
 
 !###############################################################################
-FUNCTION aed_new_lighting_model(modelname) RESULT(model)
+FUNCTION aed_new_lgt_model(modelname) RESULT(model)
 !-------------------------------------------------------------------------------
 !ARGUMENTS
    CHARACTER(*),INTENT(in) :: modelname
@@ -72,7 +72,7 @@ FUNCTION aed_new_lighting_model(modelname) RESULT(model)
    NULLIFY(model)
 
    SELECT CASE (modelname)
-!     CASE ('aed_light');          prefix = 'LGT'; ALLOCATE(aed_light_data_t::model)
+      CASE ('aed_light');          prefix = 'LGT'; ALLOCATE(aed_light_data_t::model)
       CASE ('aed_atmosphere');     prefix = 'ATM'; ALLOCATE(aed_atmosphere_data_t::model)
       CASE ('aed_oasim');          prefix = 'OAS'; ALLOCATE(aed_oasim_data_t::model)
    END SELECT
@@ -81,12 +81,12 @@ FUNCTION aed_new_lighting_model(modelname) RESULT(model)
       model%aed_model_name = modelname
       model%aed_model_prefix = prefix
    ENDIF
-END FUNCTION aed_new_lighting_model
+END FUNCTION aed_new_lgt_model
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 !###############################################################################
-SUBROUTINE aed_print_lighting_version
+SUBROUTINE aed_print_lgt_version
 !-------------------------------------------------------------------------------
 !BEGIN
    print*,"    libaed-lighting version ", TRIM(AED_VERSION)
@@ -107,7 +107,7 @@ SUBROUTINE aed_print_lighting_version
 #  endif
 # endif
 #endif
-END SUBROUTINE aed_print_lighting_version
+END SUBROUTINE aed_print_lgt_version
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !===============================================================================

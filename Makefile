@@ -103,6 +103,7 @@ OBJS=${objdir}/aed_maths.o \
      ${objdir}/aed_atmosphere.o \
      ${objdir}/aed_slingo.o \
      ${objdir}/aed_oasim.o \
+     ${objdir}/aed_light.o \
      ${objdir}/aed_lighting.o
 
 all: $(TARGET)

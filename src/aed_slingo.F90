@@ -4,6 +4,8 @@
 
 MODULE aed_slingo
 
+   USE aed_maths
+
 PUBLIC
 
 AED_REAL,PARAMETER :: a_slingo(24) = (/ &
