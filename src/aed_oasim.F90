@@ -130,13 +130,49 @@ MODULE aed_oasim
    AED_REAL,PARAMETER :: rad2deg = 180. / pi
 !
 !
-    !CAB added 
-   INTEGER :: nlambda_oasim
+
    INTEGER :: nlambda_astm
    INTEGER :: nlambda_w
-   AED_REAL,DIMENSION(:),ALLOCATABLE :: a_o_oasim, a_u_oasim, a_v_oasim, a_w,  &
-                                        b_w, et_astm, et_oasim, lambda_astm,   &
-                                        lambda_w, lambda_oasim
+
+   AED_REAL,DIMENSION(:),ALLOCATABLE :: a_w, b_w, et_astm, lambda_astm, lambda_w
+AED_REAL, parameter :: a_o_oasim(33) = (/ &
+      8.088360e+01, 3.584000e-01, 1.600000e-03, 1.000000e-04, 0.000000e+00, 8.000000e-04, 4.000000e-03, 1.210000e-02, 2.790000e-02, 5.290000e-02, &
+      8.320000e-02, 1.140000e-01, 1.176000e-01, 9.670000e-02, 6.430000e-02, 4.160000e-02, 2.610000e-02, 1.320000e-02, 7.200000e-03, 2.000000e-03, &
+      0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, &
+      0.000000e+00, 0.000000e+00, 0.000000e+00 &
+   /)
+AED_REAL, parameter :: a_u_oasim(33) = (/ &
+      0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, &
+      0.000000e+00, 0.000000e+00, 0.000000e+00, 5.800000e-03, 0.000000e+00, 2.333000e-01, 1.299000e-01, 0.000000e+00, 1.117600e+00, 1.000000e-04, &
+      0.000000e+00, 4.000000e-04, 0.000000e+00, 3.300000e-03, 3.000000e-04, 2.300000e-03, 1.400000e-03, 1.000000e-03, 1.000000e-04, 8.700000e-03, &
+      1.180000e-02, 2.560000e-02, 3.000000e-04 &
+   /)
+AED_REAL, parameter :: a_v_oasim(33) = (/ &
+      0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, &
+      0.000000e+00, 1.480000e-02, 8.510000e-02, 1.600000e-03, 4.080000e-02, 9.000000e-04, 1.074000e-01, 1.462000e-01, 6.500000e-03, 5.680000e-02, &
+      4.914200e+00, 2.790000e-02, 1.759020e+01, 4.790000e-02, 1.153197e+02, 9.520310e+01, 3.640000e-02, 8.200000e-03, 2.000800e+00, 2.289211e+02, &
+      2.550000e-01, 3.147111e+02, 9.158000e-01 &
+   /)
+AED_REAL, parameter :: ET_oasim(33) = (/ &
+      1.652800e+01, 4.100350e+01, 1.279150e+01, 2.711800e+01, 3.519350e+01, 4.217950e+01, 4.919400e+01, 4.977000e+01, 4.839450e+01, 4.649350e+01, &
+      4.651600e+01, 4.613800e+01, 4.412300e+01, 4.204680e+01, 3.952450e+01, 3.787300e+01, 1.874650e+01, 6.687750e+01, 5.999000e+01, 1.022358e+02, &
+      8.478990e+01, 6.787720e+01, 5.607620e+01, 4.611060e+01, 3.737800e+01, 3.183130e+01, 2.725240e+01, 2.276910e+01, 1.861440e+01, 2.795210e+01, &
+      3.363000e+01, 3.257750e+01, 7.263500e+00 &
+   /)
+AED_REAL, parameter :: lambda_oasim(33) = (/ &
+      2.500000e+02, 3.250000e+02, 3.500000e+02, 3.750000e+02, 4.000000e+02, 4.250000e+02, 4.500000e+02, 4.750000e+02, 5.000000e+02, 5.250000e+02, &
+      5.500000e+02, 5.750000e+02, 6.000000e+02, 6.250000e+02, 6.500000e+02, 6.750000e+02, 7.000000e+02, 7.250000e+02, 7.750000e+02, 8.500000e+02, &
+      9.500000e+02, 1.050000e+03, 1.150000e+03, 1.250000e+03, 1.350000e+03, 1.450000e+03, 1.550000e+03, 1.650000e+03, 1.750000e+03, 1.900000e+03, &
+      2.200000e+03, 2.900000e+03, 3.700000e+03 &
+   /)
+integer, parameter :: nlambda_oasim = 33
+AED_REAL, parameter :: tau_r_oasim(33) = (/ &
+      2.822900e+00, 8.742000e-01, 5.925000e-01, 4.768000e-01, 3.643000e-01, 2.833000e-01, 2.238000e-01, 1.791000e-01, 1.451000e-01, 1.189000e-01, &
+      9.830000e-02, 8.200000e-02, 6.900000e-02, 5.840000e-02, 4.980000e-02, 4.270000e-02, 3.820000e-02, 3.190000e-02, 2.440000e-02, 1.680000e-02, &
+      1.080000e-02, 7.200000e-03, 5.000000e-03, 3.200000e-03, 2.600000e-03, 2.000000e-03, 1.500000e-03, 1.200000e-03, 9.000000e-04, 7.000000e-04, &
+      4.000000e-04, 1.000000e-04, 0.000000e+00 &
+   /)
+
 
 !===============================================================================
 CONTAINS
@@ -205,7 +241,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
 !  CALL data%get_parameter(data%lambda_out(l), 'lambda' // trim(strindex) // '_out', '', 'output wavelength ' // trim(strindex))
    INTEGER  :: lambda(100)
    LOGICAL  :: save_Kd = .FALSE.    ! compute attenuation, default=.false.
-   LOGICAL  :: compute_mean_wind = .FALSE.
+   LOGICAL  :: compute_mean_wind = .TRUE.
 ! %% From Module Globals
 !  INTEGER  :: diag_level = 10      ! 0 = no diagnostic outputs
 !                                   ! 1 = basic diagnostic outputs
@@ -222,6 +258,12 @@ SUBROUTINE aed_define_oasim(data, namlst)
 !-------------------------------------------------------------------------------
 !BEGIN
    print *,"        aed_oasim configuration"
+
+   ALLOCATE(a_w(33))
+   ALLOCATE(b_w(33))
+   ALLOCATE(et_astm(33))
+   ALLOCATE(lambda_astm(33))
+   ALLOCATE(lambda_w(33))
 
    ! Read the namelist
    read(namlst,nml=aed_oasim,iostat=status)
@@ -350,55 +392,78 @@ SUBROUTINE aed_define_oasim(data, namlst)
    data%id_lon = aed_locate_global('longitude')
    data%id_lat = aed_locate_global('latitude')
    data%id_wind_speed = aed_locate_global('wind_speed')
-   data%id_cloud = aed_locate_global('cloud_area_fraction')
-   data%id_airpres = aed_locate_global('surface_air_pressure')
-   data%id_yearday = aed_locate_global('number_of_days_since_start_of_the_year')
-   data%id_h = aed_locate_global('cell_thickness')
-   data%id_relhum = aed_locate_sheet_global('relative_humidity')
-   data%id_lwp = aed_locate_sheet_global('atmosphere_mass_content_of_cloud_liquid_water')
-   data%id_O3 = aed_locate_sheet_global('atmosphere_mass_content_of_ozone')
-   data%id_WV = aed_locate_sheet_global('atmosphere_mass_content_of_water_vapor')
-   data%id_visibility = aed_locate_sheet_global('visibility_in_air')
-   data%id_air_mass_type = aed_locate_sheet_global('aerosol_air_mass_type')
+
+! MAKE PARAM CAB ?
+!  data%id_cloud = aed_locate_sheet_global('cloud_area_fraction')
+   data%id_cloud = aed_define_sheet_diag_variable('cloud_area_fraction', '-', '-')
+! MAKE PARAM CAB ?
+!  data%id_airpres = aed_locate_sheet_global('surface_air_pressure')
+   data%id_airpres = aed_define_sheet_diag_variable('surface_air_pressure', '-', '-')
+! MAKE PARAM CAB ?
+!  data%id_yearday = aed_locate_sheet_global('number_of_days_since_start_of_the_year')
+   data%id_yearday = aed_define_sheet_diag_variable('number_of_days_since_start_of_the_year', '-', '-')
+! MAKE PARAM CAB ?
+!  data%id_h = aed_locate_global('cell_thickness')
+   data%id_h = aed_define_diag_variable('cell_thickness', '-', '-')
+! MAKE PARAM CAB ?
+!  data%id_relhum = aed_locate_sheet_global('relative_humidity')
+   data%id_relhum = aed_define_sheet_diag_variable('relative_humidity', '-', '-')
+! MAKE PARAM CAB ?
+!  data%id_lwp = aed_locate_sheet_global('atmosphere_mass_content_of_cloud_liquid_water')
+   data%id_lwp = aed_define_sheet_diag_variable('atmosphere_mass_content_of_cloud_liquid_water', '-', '-')
+! MAKE PARAM CAB ?
+!  data%id_O3 = aed_locate_sheet_global('atmosphere_mass_content_of_ozone')
+   data%id_O3 = aed_define_sheet_diag_variable('atmosphere_mass_content_of_ozone', '-', '-')
+! MAKE PARAM CAB ?
+!  data%id_WV = aed_locate_sheet_global('atmosphere_mass_content_of_water_vapor')
+   data%id_WV = aed_define_sheet_diag_variable('atmosphere_mass_content_of_water_vapor', '-', '-')
+! MAKE PARAM CAB ?
+!  data%id_visibility = aed_locate_sheet_global('visibility_in_air')
+   data%id_visibility = aed_define_sheet_diag_variable('visibility_in_air', '-', '-')
+! MAKE PARAM CAB ?
+!  data%id_air_mass_type = aed_locate_sheet_global('aerosol_air_mass_type')
+   data%id_air_mass_type = aed_define_sheet_diag_variable('aerosol_air_mass_type', '-', '-')
 
    IF (compute_mean_wind) THEN
-      data%id_mean_wind_out = aed_define_diag_variable('mean_wind', 'm/s', 'daily mean wind speed')
+      data%id_mean_wind_out = aed_define_sheet_diag_variable('mean_wind', 'm/s', 'daily mean wind speed')
+      ! CAB need something here ....
+      data%id_mean_wind_speed = aed_define_sheet_diag_variable('mean_wind', 'm/s', 'daily mean wind speed')
    ELSE
-      data%id_mean_wind_speed = aed_locate_global('mean_wind')
+      data%id_mean_wind_speed = aed_locate_sheet_global('mean_wind')
    ENDIF
 
-   data%id_zen = aed_define_diag_variable('zen', 'degrees', 'zenith angle')
+   data%id_zen = aed_define_sheet_diag_variable('zen', 'degrees', 'zenith angle')
 
    ! Aerosol properties
-   data%id_alpha_a =  aed_define_diag_variable('alpha_a', '-', 'aerosol Angstrom exponent')
-   data%id_beta_a =   aed_define_diag_variable('beta_a', '-', 'aerosol scale factor for optical thickness')
-   data%id_omega_a =  aed_define_diag_variable('omega_a', '-', 'aerosol single scattering albedo')
-   data%id_F_a =      aed_define_diag_variable('F_a', '-', 'aerosol forward scattering probability')
-   data%id_wind_out = aed_define_diag_variable('wind', 'm/s', 'wind speed')
+   data%id_alpha_a =  aed_define_sheet_diag_variable('alpha_a', '-', 'aerosol Angstrom exponent')
+   data%id_beta_a =   aed_define_sheet_diag_variable('beta_a', '-', 'aerosol scale factor for optical thickness')
+   data%id_omega_a =  aed_define_sheet_diag_variable('omega_a', '-', 'aerosol single scattering albedo')
+   data%id_F_a =      aed_define_sheet_diag_variable('F_a', '-', 'aerosol forward scattering probability')
+   data%id_wind_out = aed_define_sheet_diag_variable('wind', 'm/s', 'wind speed')
 
    ! Horizontal downwelling irradiance just above the water surface (BEFORE reflection by water surface)
-   data%id_swr_sf =     aed_define_diag_variable('swr_sf', 'W/m^2', 'downwelling shortwave flux in air')
-   data%id_swr_dif_sf = aed_define_diag_variable('swr_dif_sf', 'W/m^2', 'diffuse downwelling shortwave flux in air')
-   data%id_uv_sf =      aed_define_diag_variable('uv_sf', 'W/m^2', 'downwelling ultraviolet radiative flux in air')
-   data%id_par_sf =     aed_define_diag_variable('par_sf', 'W/m^2', 'downwelling photosynthetic radiative flux in air')
-   data%id_par_E_sf =   aed_define_diag_variable('par_E_sf', 'umol/m^2/s', 'downwelling photosynthetic photon flux in air')
+   data%id_swr_sf =     aed_define_sheet_diag_variable('swr_sf', 'W/m^2', 'downwelling shortwave flux in air')
+   data%id_swr_dif_sf = aed_define_sheet_diag_variable('swr_dif_sf', 'W/m^2', 'diffuse downwelling shortwave flux in air')
+   data%id_uv_sf =      aed_define_sheet_diag_variable('uv_sf', 'W/m^2', 'downwelling ultraviolet radiative flux in air')
+   data%id_par_sf =     aed_define_sheet_diag_variable('par_sf', 'W/m^2', 'downwelling photosynthetic radiative flux in air')
+   data%id_par_E_sf =   aed_define_sheet_diag_variable('par_E_sf', 'umol/m^2/s', 'downwelling photosynthetic photon flux in air')
 
    ! Horizontal downwelling irradiance just below the water surface (AFTER reflection by water surface)
-   data%id_swr_sf_w =   aed_define_diag_variable('swr_sf_w', 'W/m^2', 'downwelling shortwave flux in water')
-   data%id_uv_sf_w =    aed_define_diag_variable('uv_sf_w', 'W/m^2', 'downwelling ultraviolet radiative flux in water')
-   data%id_par_sf_w =   aed_define_diag_variable('par_sf_w', 'W/m^2', 'downwelling photosynthetic radiative flux in water')
-   data%id_par_E_sf_w = aed_define_diag_variable('par_E_sf_w', 'umol/m^2/s', 'downwelling photosynthetic photon flux in water')
+   data%id_swr_sf_w =   aed_define_sheet_diag_variable('swr_sf_w', 'W/m^2', 'downwelling shortwave flux in water')
+   data%id_uv_sf_w =    aed_define_sheet_diag_variable('uv_sf_w', 'W/m^2', 'downwelling ultraviolet radiative flux in water')
+   data%id_par_sf_w =   aed_define_sheet_diag_variable('par_sf_w', 'W/m^2', 'downwelling photosynthetic radiative flux in water')
+   data%id_par_E_sf_w = aed_define_sheet_diag_variable('par_E_sf_w', 'umol/m^2/s', 'downwelling photosynthetic photon flux in water')
 
    ! Scalar downwelling irradiance within the water column
-   data%id_swr =          aed_define_diag_variable('swr', 'W/m^2', 'downwelling shortwave flux')
-   data%id_uv =           aed_define_diag_variable('uv', 'W/m^2', 'downwelling ultraviolet radiative flux')
-   data%id_par =          aed_define_diag_variable('par', 'W/m^2', 'downwelling photosynthetic radiative flux')
-   data%id_par_E =        aed_define_diag_variable('par_E', 'umol/m^2/s', 'downwelling photosynthetic photon flux')
+   data%id_swr =          aed_define_sheet_diag_variable('swr', 'W/m^2', 'downwelling shortwave flux')
+   data%id_uv =           aed_define_sheet_diag_variable('uv', 'W/m^2', 'downwelling ultraviolet radiative flux')
+   data%id_par =          aed_define_sheet_diag_variable('par', 'W/m^2', 'downwelling photosynthetic radiative flux')
+   data%id_par_E =        aed_define_sheet_diag_variable('par_E', 'umol/m^2/s', 'downwelling photosynthetic photon flux')
    data%id_par_J_scalar = aed_define_diag_variable('par_J_scalar','W/m^2', 'scalar downwelling photosynthetic radiative flux')
    data%id_par_E_scalar = aed_define_diag_variable('par_E_scalar','umol/m^2/s', 'scalar downwelling photosynthetic photon flux')
    data%id_swr_abs =      aed_define_diag_variable('swr_abs', 'W/m^2', 'absorption of shortwave energy in layer')
-   data%id_par_E_dif =    aed_define_diag_variable('par_E_dif', 'W/m^2', 'diffusive downwelling photosynthetic photon flux')
-   !data%id_secchi =      aed_define_diag_variable('secchi', 'm', 'Secchi depth (1.7/Kd 490)')
+   data%id_par_E_dif =    aed_define_sheet_diag_variable('par_E_dif', 'W/m^2', 'diffusive downwelling photosynthetic photon flux')
+   !data%id_secchi =      aed_define_sheet_diag_variable('secchi', 'm', 'Secchi depth (1.7/Kd 490)')
 
    ! Interpolate absorption and scattering spectra to user wavelength grid
    ALLOCATE(data%a_w(nlambda), data%b_w(nlambda))
@@ -561,13 +626,13 @@ SUBROUTINE aed_calculate_oasim(data,column,layer_idx)
    LWP         = _STATE_VAR_S_(data%id_lwp)             ! Cloud liquid water content (kg m-2)
    O3          = _STATE_VAR_S_(data%id_O3)              ! Ozone content (kg m-2)
    water_vapour= _STATE_VAR_S_(data%id_wv)              ! Total precipitable water vapour (kg m-2) - equivalent to mm
-   WM          = _STATE_VAR_S_(data%id_mean_wind_speed) ! Daily mean wind speed @ 10 m above surface (m/s)
+   WM          =  _DIAG_VAR_S_(data%id_mean_wind_speed) ! Daily mean wind speed @ 10 m above surface (m/s)
    visibility  = _STATE_VAR_S_(data%id_visibility)      ! Visibility (m)
    AM          = _STATE_VAR_S_(data%id_air_mass_type)   ! Aerosol air mass type (1: open ocean, 10: continental)
 
    ! For debugging
    _DIAG_VAR_S_(data%id_wind_out) = wind_speed
-!CAB   IF (_VARIABLE_REGISTERED_(data%id_mean_wind_out)) _SET_HORIZONTAL_DIAGNOSTIC_(data%id_mean_wind_out, WM)
+   IF (data%id_mean_wind_out > 0) _DIAG_VAR_S_(data%id_mean_wind_out) = WM
 
    IF (cloud_cover > 0) LWP = LWP / cloud_cover  ! LWP is the mean density over a grid box (Jorn: ECMWF pers comm 26/2/2019), but we want the mean density per cloud-covered area
    WV = water_vapour / 10                        ! from kg m-2 to cm
