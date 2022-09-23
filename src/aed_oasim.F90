@@ -201,18 +201,18 @@ SUBROUTINE aed_define_oasim(data, namlst)
    INTEGER,PARAMETER :: exter_source = 2
 
    ! Coefficients for wavelength dependence of foam reflectance (Eqs A11, A12 in Gregg & Casey 2009)
-   AED_REAL,PARAMETER :: a0 = 0.9976
-   AED_REAL,PARAMETER :: a1 = 0.2194
-   AED_REAL,PARAMETER :: a2 = 0.0554
-   AED_REAL,PARAMETER :: a3 = 0.0067
-   AED_REAL,PARAMETER :: b0 = 5.026
+   AED_REAL,PARAMETER :: a0 =  0.9976
+   AED_REAL,PARAMETER :: a1 =  0.2194
+   AED_REAL,PARAMETER :: a2 =  0.0554
+   AED_REAL,PARAMETER :: a3 =  0.0067
+   AED_REAL,PARAMETER :: b0 =  5.026
    AED_REAL,PARAMETER :: b1 = -0.0114
-   AED_REAL,PARAMETER :: b2 = 9.552e-6
+   AED_REAL,PARAMETER :: b2 =  9.552e-6
    AED_REAL,PARAMETER :: b3 = -2.698e-9
 
-   AED_REAL,PARAMETER :: Planck = 6.62606957e-34  ! Planck constant (m2 kg/s)
-   AED_REAL,PARAMETER :: lightspeed = 299792458   ! Speed of light (m/s)
-   AED_REAL,PARAMETER :: Avogadro = 6.02214129e23 ! Avogadro constant (/mol)
+   AED_REAL,PARAMETER :: Planck     = 6.62606957e-34 ! Planck constant (m2 kg/s)
+   AED_REAL,PARAMETER :: lightspeed = 299792458      ! Speed of light (m/s)
+   AED_REAL,PARAMETER :: Avogadro   = 6.02214129e23  ! Avogadro constant (/mol)
 
    AED_REAL :: log_T_w
 
@@ -455,15 +455,16 @@ SUBROUTINE aed_define_oasim(data, namlst)
    data%id_par_E_sf_w = aed_define_sheet_diag_variable('par_E_sf_w', 'umol/m^2/s', 'downwelling photosynthetic photon flux in water')
 
    ! Scalar downwelling irradiance within the water column
-   data%id_swr =          aed_define_sheet_diag_variable('swr', 'W/m^2', 'downwelling shortwave flux')
-   data%id_uv =           aed_define_sheet_diag_variable('uv', 'W/m^2', 'downwelling ultraviolet radiative flux')
-   data%id_par =          aed_define_sheet_diag_variable('par', 'W/m^2', 'downwelling photosynthetic radiative flux')
-   data%id_par_E =        aed_define_sheet_diag_variable('par_E', 'umol/m^2/s', 'downwelling photosynthetic photon flux')
+   data%id_swr =          aed_define_diag_variable('swr', 'W/m^2', 'downwelling shortwave flux')
+   data%id_uv =           aed_define_diag_variable('uv', 'W/m^2', 'downwelling ultraviolet radiative flux')
+   data%id_par =          aed_define_diag_variable('par', 'W/m^2', 'downwelling photosynthetic radiative flux')
+   data%id_par_E =        aed_define_diag_variable('par_E', 'umol/m^2/s', 'downwelling photosynthetic photon flux')
    data%id_par_J_scalar = aed_define_diag_variable('par_J_scalar','W/m^2', 'scalar downwelling photosynthetic radiative flux')
    data%id_par_E_scalar = aed_define_diag_variable('par_E_scalar','umol/m^2/s', 'scalar downwelling photosynthetic photon flux')
    data%id_swr_abs =      aed_define_diag_variable('swr_abs', 'W/m^2', 'absorption of shortwave energy in layer')
-   data%id_par_E_dif =    aed_define_sheet_diag_variable('par_E_dif', 'W/m^2', 'diffusive downwelling photosynthetic photon flux')
-   !data%id_secchi =      aed_define_sheet_diag_variable('secchi', 'm', 'Secchi depth (1.7/Kd 490)')
+   data%id_par_E_dif =    aed_define_diag_variable('par_E_dif', 'W/m^2', 'diffusive downwelling photosynthetic photon flux')
+
+   data%id_secchi =       aed_define_sheet_diag_variable('secchi', 'm', 'Secchi depth (1.7/Kd 490)')
 
    ! Interpolate absorption and scattering spectra to user wavelength grid
    ALLOCATE(data%a_w(nlambda), data%b_w(nlambda))
@@ -530,7 +531,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
    END SELECT
    data%save_Kd = save_Kd
 
-   IF (ALLOCATEd(data%lambda_out)) THEN
+   IF (ALLOCATED(data%lambda_out)) THEN
       ALLOCATE(data%id_surface_band_dir(size(data%lambda_out)))
       ALLOCATE(data%id_surface_band_dif(size(data%lambda_out)))
       ALLOCATE(data%id_band_dir(size(data%lambda_out)))
@@ -546,9 +547,9 @@ SUBROUTINE aed_define_oasim(data, namlst)
             write(strwavelength, '(f6.1)') data%lambda_out(l)
          ENDIF
          write(strindex, '(i0)') l
-         data%id_surface_band_dir(l) = aed_define_diag_variable('dir_sf_band' // trim(strindex), &
+         data%id_surface_band_dir(l) = aed_define_sheet_diag_variable('dir_sf_band' // trim(strindex), &
                                 'W/m2/nm', 'downward direct irradiance in air @ ' // trim(strwavelength) // ' nm')
-         data%id_surface_band_dif(l) = aed_define_diag_variable('dif_sf_band' // trim(strindex), &
+         data%id_surface_band_dif(l) = aed_define_sheet_diag_variable('dif_sf_band' // trim(strindex), &
                                 'W/m2/nm', 'downward diffuse irradiance in air @ ' // trim(strwavelength) // ' nm')
          data%id_band_dir(l) = aed_define_diag_variable('dir_band' // trim(strindex), &
                                 'W/m2/nm', 'direct irradiance @ ' // trim(strwavelength) // ' nm')
@@ -771,12 +772,12 @@ SUBROUTINE aed_calculate_oasim(data,column,layer_idx)
          SELECT CASE (data%spectral_output)
          CASE (1)
             DO l = 1, data%nlambda
-               _DIAG_VAR_S_(data%id_a_iop(l, i_iop)) = a_iop(l)
+               _DIAG_VAR_(data%id_a_iop(l, i_iop)) = a_iop(l)
             ENDDO
          CASE (2)
             CALL interp(data%nlambda, data%lambda, a_iop, size(data%lambda_out), data%lambda_out, spectrum_out)
             DO l = 1, size(data%lambda_out)
-               _DIAG_VAR_S_(data%id_a_iop(l, i_iop)) = spectrum_out(l)
+               _DIAG_VAR_(data%id_a_iop(l, i_iop)) = spectrum_out(l)
             ENDDO
          END SELECT
          a = a + a_iop
@@ -813,11 +814,11 @@ SUBROUTINE aed_calculate_oasim(data,column,layer_idx)
       swr_J = sum(data%swr_weights * spectrum)
       par_E = sum(data%par_E_weights * spectrum)
       uv_J  = sum(data%uv_weights * spectrum)
-      _DIAG_VAR_S_(data%id_par) = par_J   ! Photosynthetically Active Radiation (W/m2)
-      _DIAG_VAR_S_(data%id_par_E) = par_E ! Photosynthetically Active Radiation (umol/m2/s)
-      _DIAG_VAR_S_(data%id_swr) =  swr_J  ! Total shortwave radiation (W/m2) [up to 4000 nm]
-      _DIAG_VAR_S_(data%id_uv) = uv_J     ! UV (W/m2)
-      _DIAG_VAR_S_(data%id_par_E_dif) = sum(data%par_E_weights * diffuse) ! Diffuse Photosynthetically Active photon flux (umol/m2/s)
+      _DIAG_VAR_(data%id_par) = par_J   ! Photosynthetically Active Radiation (W/m2)
+      _DIAG_VAR_(data%id_par_E) = par_E ! Photosynthetically Active Radiation (umol/m2/s)
+      _DIAG_VAR_(data%id_swr) =  swr_J  ! Total shortwave radiation (W/m2) [up to 4000 nm]
+      _DIAG_VAR_(data%id_uv) = uv_J     ! UV (W/m2)
+      _DIAG_VAR_(data%id_par_E_dif) = sum(data%par_E_weights * diffuse) ! Diffuse Photosynthetically Active photon flux (umol/m2/s)
 
       ! Compute scalar PAR as experienced by phytoplankton
       spectrum = direct / costheta_r + diffuse / mcosthetas
