@@ -165,4 +165,228 @@ END SUBROUTINE slingo
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
+
+
+!###############################################################################
+AED_REAL FUNCTION vH_O3(long, lat, day)
+!-------------------------------------------------------------------------------
+! Van Heuklon (1979) function to account for seasonal and geographical variation 
+! in O3. See :
+! Estimating Atmospheric Ozone for Solar Radiation Models - van Heuklon, T.K. (1979)
+! "Solar Energy" Vol 22, pp. 63-68
+! Cf Bird 1984 p 466 reports O3=0.344 atm-cm
+!-------------------------------------------------------------------------------
+!ARGUMENTS
+   AED_REAL,INTENT(in) :: long, lat, day
+!
+!LOCALS
+   AED_REAL :: O3 ! kg m-2
+
+   ! Eq 4
+   !  O3 = J + {A + C sin[D(E + F)] + G sin[H(lambda + I)]}[sin**2(beta * phi)]
+   !
+   ! Where Table 1 provides :
+   !
+   !------------------------------------------------------------
+   ! Parm.     N.hemisphere       Both h/sphere    S.hemisphere
+   !------------------------------------------------------------
+   !  A          150.0                 --             100.0
+   ! beta          1.28                --               1.5
+   !  C           40.0                 --              30.0
+   !  D                              0.9865
+   !  E                       Jan 1 = 1.0; Jan 2 = 2.0 ...
+   !  F          -30.0                 --             152.625
+   !  G                               20.0
+   !  H            3.0                 --               2.0
+   !  I    if lambda > 0 then 20.0     --             -75.0
+   !       else                0.0
+   !  J                               235.0
+   ! phi        N = +                                 S = -
+   ! lambda                        E = +, W = -
+   !------------------------------------------------------------
+
+   AED_REAL,PARAMETER :: D = 0.9865, G = 20., J = 235.
+
+   AED_REAL :: A, beta, C, E, F, H, I, phi, lambda
+
+   AED_REAL,PARAMETER :: deg2rad = 3.14159265358979323846 / 180.
+!
+!-------------------------------------------------------------------------------
+!BEGIN
+    E = day
+    phi = lat
+    lambda = -180. + MOD(long + 180., 360.)
+
+    IF (lat > 0.) THEN ! North
+       A = 150.
+       beta = 1.28
+       C = 40.
+       F = -30.
+       H = 3.
+       IF (lambda > 0.) THEN ! E
+          I = 20.
+       ELSE ! W
+          I = 0.
+       ENDIF
+    ELSE ! South
+       A = 100.
+       beta = 1.5
+       C = 30.
+       F = 152.625
+       H = 2.
+       I = -75.
+    ENDIF
+
+    vH_O3 = J + (A + C * sin(D * (E + F) * deg2rad) +                          &
+            G * sin(H * (lambda + I) * deg2rad)) * sin(beta * phi * deg2rad)**2
+
+    ! From matm-cm to mol m-2 to kg m-2
+    vH_O3 = vH_O3 * 0.4462e-3 * 48. / 1000
+  
+
+END FUNCTION vH_O3
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+!###############################################################################
+AED_REAL FUNCTION zenith_angle(days, hour, dlon, dlat)
+!-------------------------------------------------------------------------------
+! Spencer, J.W. (1971)
+!  Fourier Series Representation of the Position of the Sun.
+!  Search, 2, 162-172.
+!-------------------------------------------------------------------------------
+!ARGUMENTS
+    AED_REAL,INTENT(in)  :: days, hour, dlon, dlat
+!
+!LOCALS
+    AED_REAL,PARAMETER :: yrdays = 365.24
+    AED_REAL           :: th0, th02, th03, sundec
+    AED_REAL           :: thsun, coszen
+    AED_REAL           :: rlon, rlat
+!-------------------------------------------------------------------------------
+!BEGIN
+    ! from now on everything in radians
+    rlon = deg2rad * dlon
+    rlat = deg2rad * dlat
+
+    ! Sun declination from Fourier expansion of Spencer (1971, Search 2:172).
+    th0 = 2.*pi*days/yrdays
+    th02 = 2.*th0
+    th03 = 3.*th0
+    sundec =  0.006918 - 0.399912*cos(th0) + 0.070257*sin(th0) &
+            - 0.006758*cos(th02) + 0.000907*sin(th02)                &
+            - 0.002697*cos(th03) + 0.001480*sin(th03)
+
+    ! sun hour angle :
+    thsun = (hour-12.)*15.*deg2rad + rlon
+
+    ! cosine of the solar zenith angle :
+    coszen = sin(rlat)*sin(sundec)+cos(rlat)*cos(sundec)*cos(thsun)
+
+    zenith_angle = acos(coszen)
+END FUNCTION zenith_angle
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+!###############################################################################
+SUBROUTINE navy_aerosol_model(AM, WM, W, RH, V, costheta, alpha, beta, F_a, omega_a)
+!-------------------------------------------------------------------------------
+! AM: air-mass type (1 = marine aerosol-dominated, 10 continental aerosol-dominated)
+! WM: wind speed averaged over past 24 h (m s-1)
+! W: instantaneous wind speed (m s-1)
+! RH: relative humidity (-)
+! V: visibility (m)
+! costheta: cosine of zenith angle
+! alpha: Angstrom exponent. NB optical thickness tau = beta * lambda**(-alpha)
+! beta: scale factor for optical thickness
+! F_a: forward scattering probability
+! omega_a: single scattering albedo
+!-------------------------------------------------------------------------------
+!ARGUMENTS
+   AED_REAL,INTENT(in) :: AM, WM, W, RH, V, costheta
+   AED_REAL,INTENT(out) :: alpha, beta, F_a, omega_a
+!
+!LOCALS
+   AED_REAL,PARAMETER :: R = 0.05
+   INTEGER,PARAMETER :: nsize = 3, gridsize = 3
+   AED_REAL,PARAMETER :: r_o(nsize) = (/0.03, 0.24, 2.0/)
+   AED_REAL,PARAMETER :: H_a = 1000. ! Aerosol scale height (m) Gregg & Carder 1990 p1665
+   AED_REAL,PARAMETER :: r_grid(gridsize) = (/0.1, 1., 10./)
+
+   AED_REAL :: relhum, A(nsize), f, gamma, tau_a550
+   AED_REAL :: dNdr(gridsize), y(gridsize), x(gridsize)
+   INTEGER :: i
+   AED_REAL :: c_a550
+   AED_REAL :: B1, B2, B3, cos_theta_bar
+
+!-------------------------------------------------------------------------------
+!BEGIN
+   ! Impose upper limit on relative humidity (RH = 1 causes division by 0 in expression for f below)
+   relhum = min(0.999, RH)
+
+   ! Amplitude functions for aerosol components (Eqs 21-23 Gregg & Carder 1990)
+   ! Units are number of particles per cubic centimeter per micrometer (Gathman 1983)
+   A(1) = 2000 * AM * AM
+   A(2) = max(0.5, 5.866 * (WM - 2.2))
+   A(3) = max(1.4e-5, 0.01527 * (W - 2.2) * R)
+
+   ! function relating particle size to relative humidity (Eq 24 Gregg & Carder 1990)
+   f = ((2. - relhum) / (6 * (1. - relhum)))**(1. / 3.)
+
+   ! Particle density at different radii (Gregg & Carder 1990 p 1665)
+   DO i = 1, gridsize
+       dNdr(i) = sum(A * exp(-log(r_grid(i) / f / r_o)**2) / f)
+   ENDDO
+
+   ! Assume Junge distribution (i.e., particle density is power law of radius): dN/dr = C r^gamma
+   ! Estimate gamma with least squares.
+   ! Note: least-squares estimate of slope is x-y covariance / variance of x
+   ! Due to the choice of r_grid (0.1, 1, 10), the sum of x_i = log10 r_i is 0.
+   ! As a result, we do not need to subtract x_mean*y_mean and x_mean^2 to compute (co)variances.
+   x = log10(r_grid)
+   y = log10(dNdr)
+   gamma = sum(x * y) / sum(x**2)
+
+   ! Calculate Angstrom exponent from exponent of Junge distribution (Eq 26 Gregg & Carder 1990).
+   ! Junge distribution: dN/d(ln r) = r dN/dr = C r^(-v)
+   ! Thus, dN/dr = C r^(-v-1)
+   ! The relation to gamma defined above: gamma = -v - 1. Thus, v = -gamma - 1
+   ! The relationship between Junge distribution and Angstrom exponent is alpha = v - 2 (e.g. Tomasi et al. 1983)
+   ! Thus, alpha = -gamma - 3
+   alpha = -(gamma + 3)
+
+   ! Estimate concentrationPARAMETER (Eqs 28, 29 Gregg & Carder 1990)
+   c_a550 = 3.91 / V
+   tau_a550 = c_a550 * H_a
+   beta = tau_a550 * 550.**alpha
+
+   ! AsymmetryPARAMETER (Eq 35 Gregg & Carder 1990) - called alpha in Gregg & Casey 2009
+   ! Range: 0.65 (alpha >= 1.2) to 0.82 (alpha <= 0)
+   ! For comparison:
+   ! - Bird 1984 (Eq 15) uses cos_theta_bar = 0.64 [implied by value of F_a]
+   ! - Bird & Riordan 1986 (p 91) use cos_theta_bar = 0.65
+   cos_theta_bar = -0.1417 * min(max(0., alpha), 1.2) + 0.82
+
+   ! Forward scattering probability (Eqs 31-34 Gregg & Carder 1990)
+   ! NB B1-B3 are A, B, C in Gregg & Casey 2009 Eqs 3-6
+   ! NB B1-B3 are AFS, BFS, ALG in Bird & Riordan 1986 Eqs 22-26
+   B3 = log(1. - cos_theta_bar)
+   B1 = B3 * (1.4590 + B3 * ( 0.1595 + 0.4129 * B3))
+   B2 = B3 * (0.0783 + B3 * (-0.3824 - 0.5874 * B3))
+   F_a = 1. - 0.5 * exp((B1 + B2 * costheta) * costheta)
+
+   ! Single scattering albedo (Eq 36 Gregg & Carder 1990)
+   ! For comparison:
+   ! - Bird 1984 (Eq 15) uses omega_a = 0.928
+   ! - Bird & Riordan 1986 (p 91) use omega_a = 0.945 at 400 nm for rural aerosols (AM = 10)
+   ! - Shettle and Fenn 1979 (tables 28-35) report 0.982 at RH=0% to 0.9986 at RH=99% at 550 nm for their maritime aerosol model (AM=1)
+   omega_a = (-0.0032 * AM + 0.972) * exp(3.06e-2 * relhum)
+END SUBROUTINE navy_aerosol_model
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
 END MODULE aed_slingo
+
