@@ -376,7 +376,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
 
    data%id_h = aed_locate_global('depth') 
 !   data%id_h = aed_locate_global('layer_ht') 
-   
+
    data%id_wind_speed = aed_locate_sheet_global('wind_speed')
    data%id_relhum = aed_locate_sheet_global('air_temp') ! MH temp hack for testing ; GLM needs passed humidity thru
 !   data%id_relhum = aed_locate_sheet_global('humidity')
@@ -622,11 +622,11 @@ SUBROUTINE aed_calculate_oasim(data,column,layer_idx)
    WM          =  _DIAG_VAR_S_(data%id_mean_wind_speed) ! Daily mean wind speed @ 10 m above surface (m/s)
 
    AM          = data%air_mass_type !_STATE_VAR_S_(data%id_air_mass_type)   ! Aerosol air mass type (1: open ocean, 10: continental)
-   visibility  = data%visibility ! _STATE_VAR_S_(data%id_visibility)      ! Visibility (m)
-   airpres     = data%airpres ! _STATE_VAR_S_(data%id_airpres)         ! Surface air pressure (Pa)
-   cloud_cover = data%cloud ! _STATE_VAR_S_(data%id_cloud)           ! Cloud cover (fraction, 0-1)
-   LWP         = data%LWP !_STATE_VAR_S_(data%id_lwp)             ! Cloud liquid water content (kg m-2)
-   water_vapour= data%WV ! _STATE_VAR_S_(data%id_wv)            ! Total precipitable water vapour (kg m-2) - equivalent to mm
+   visibility  = data%visibility ! _STATE_VAR_S_(data%id_visibility)     ! Visibility (m)
+   airpres     = data%airpres ! _STATE_VAR_S_(data%id_airpres)       ! Surface air pressure (Pa)
+   cloud_cover = data%cloud ! _STATE_VAR_S_(data%id_cloud)        ! Cloud cover (fraction, 0-1)
+   LWP         = data%LWP ! _STATE_VAR_S_(data%id_lwp)        ! Cloud liquid water content (kg m-2)
+   water_vapour= data%WV ! _STATE_VAR_S_(data%id_wv)       ! Total precipitable water vapour (kg m-2) - equivalent to mm
    
    O3          = data%O3    ! Ozone content (kg m-2)
    IF(data%ozone) THEN 
@@ -634,7 +634,6 @@ SUBROUTINE aed_calculate_oasim(data,column,layer_idx)
       _DIAG_VAR_S_(data%id_O3) = O3
    ENDIF
 
-   print *,'calc 1'
 
    ! For debugging
    _DIAG_VAR_S_(data%id_wind_out) = wind_speed
@@ -652,7 +651,6 @@ SUBROUTINE aed_calculate_oasim(data,column,layer_idx)
    _DIAG_VAR_S_(data%id_zen) = rad2deg * theta
    costheta = cos(theta)
 
-   print *,'calc 2'
 
    ! Atmospheric path length, a.k.a. relative air mass (Eq 3 Bird 1984, Eq 5 Bird & Riordan 1986, Eq 13 Gregg & Carder 1990, Eq A5 in Casey & Gregg 2009)
    ! Note this should always exceed 1, but as it is an approximation it does not near theta -> 0 (Tomasi et al. 1998 p14). Hence the max operator.
@@ -688,7 +686,6 @@ SUBROUTINE aed_calculate_oasim(data,column,layer_idx)
    ! Transmittance due to Rayleigh scattering (use precomputed optical thickness)
    T_r = exp(-M_prime * data%tau_r)
 
-   print *,'calc 3'
 
    ! Transmittance due to aerosol absorption (Eq 26 Gregg & Carder 1990)
    CALL navy_aerosol_model(AM, WM, wind_speed, relhum, visibility, costheta, alpha_a, beta_a, F_a, omega_a)
@@ -711,7 +708,6 @@ SUBROUTINE aed_calculate_oasim(data,column,layer_idx)
    ! -------------------
    ! cloudy skies part
    ! -------------------
-   print *,'calc 4'
 
    ! Transmittance due to absorption and scattering by clouds
    CALL slingo(costheta, max(0., LWP) * 1000, r_e, data%nlambda, data%lambda, T_dcld, T_scld)
@@ -734,7 +730,6 @@ SUBROUTINE aed_calculate_oasim(data,column,layer_idx)
    swr_J = sum(data%swr_weights * diffuse)
    _DIAG_VAR_S_(data%id_swr_dif_sf) = swr_J ! Diffuse shortwave radiation (W/m2), SW [up to 4000 nm]
 
-   print *,'calc 5'
 
    SELECT CASE (data%spectral_output)
    CASE (1)
@@ -755,7 +750,6 @@ SUBROUTINE aed_calculate_oasim(data,column,layer_idx)
 
    ! Sea surface reflectance
    CALL reflectance(data%nlambda, data%F, theta, wind_speed, rho_d, rho_s, costheta_r)
-   print *,'calc 6'
 
    ! Incorporate the loss due to reflectance
    direct = direct * (1. - rho_d)
@@ -771,7 +765,6 @@ SUBROUTINE aed_calculate_oasim(data,column,layer_idx)
    _DIAG_VAR_S_(data%id_swr_sf_w) =  swr_J ! Total shortwave radiation (W/m2) [up to 4000 nm]
    _DIAG_VAR_S_(data%id_uv_sf_w) = uv_J    ! UV (W/m2)
 
-   print *,'calc 7'
 
 !CAB   _DOWNWARD_LOOP_BEGIN_
       ! Save downwelling shortwave flux at top of the layer
@@ -834,7 +827,6 @@ SUBROUTINE aed_calculate_oasim(data,column,layer_idx)
       _DIAG_VAR_(data%id_swr) =  swr_J  ! Total shortwave radiation (W/m2) [up to 4000 nm]
       _DIAG_VAR_(data%id_uv) = uv_J     ! UV (W/m2)
       _DIAG_VAR_(data%id_par_E_dif) = sum(data%par_E_weights * diffuse) ! Diffuse Photosynthetically Active photon flux (umol/m2/s)
-      print *,'calc 8'
 
       ! Compute scalar PAR as experienced by phytoplankton
       spectrum = direct / costheta_r + diffuse / mcosthetas
@@ -876,7 +868,6 @@ SUBROUTINE aed_calculate_oasim(data,column,layer_idx)
       ! Compute remaining downwelling shortwave flux and from that, absorption [heating]
       swr_J = sum(data%swr_weights * spectrum)
       _DIAG_VAR_(data%id_swr_abs) = swr_top - swr_J
-      print *,'calc 9'
 
 !CAB   _VERTICAL_LOOP_END_
 
