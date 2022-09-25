@@ -374,12 +374,10 @@ SUBROUTINE aed_define_oasim(data, namlst)
    data%id_yearday = aed_locate_global('air_temp') ! MH temp hack for testing ; GLM needs pass yearday thru
    !data%id_yearday = aed_locate_global('yearday') 
 
-   data%id_h = aed_locate_global('depth') 
+   data%id_h = aed_locate_global('depth')  ! MH temp hack until vert loop
 !   data%id_h = aed_locate_global('layer_ht') 
-
    data%id_wind_speed = aed_locate_sheet_global('wind_speed')
-   data%id_relhum = aed_locate_sheet_global('air_temp') ! MH temp hack for testing ; GLM needs passed humidity thru
-!   data%id_relhum = aed_locate_sheet_global('humidity')
+   data%id_relhum = aed_locate_sheet_global('humidity')
   
   ! data%id_cloud = aed_locate_sheet_global('cloud')
   ! data%id_airpres = aed_locate_sheet_global('air_press')
