@@ -45,7 +45,7 @@ MODULE aed_maths
    PRIVATE
 !
 !  PUBLIC interp_0d, interp_0d_scalar, interp_1d, interp_1d_scalar
-   PUBLIC interp, calculate_integral_weights
+   PUBLIC interp, calculate_integral_weights, pi, deg2rad, rad2deg
 !
 
    INTERFACE interp
@@ -54,6 +54,10 @@ MODULE aed_maths
       MODULE PROCEDURE interp_0d_scalar
       MODULE PROCEDURE interp_1d_scalar
    END INTERFACE
+
+AED_REAL,PARAMETER :: pi = 3.14159265358979323846
+AED_REAL,PARAMETER :: deg2rad = pi / 180.
+AED_REAL,PARAMETER :: rad2deg = 180. / pi
 
 CONTAINS
 

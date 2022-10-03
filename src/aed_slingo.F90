@@ -82,6 +82,7 @@ AED_REAL,PARAMETER :: lambda_slingo(24) = (/ &
 
 INTEGER,PARAMETER :: nlambda_slingo = 24
 
+
 CONTAINS
 
 ! https://journals.ametsoc.org/downloadpdf/journals/atsc/46/10/1520-0469_1989_046_1419_agpfts_2_0_co_2.pdf
@@ -209,7 +210,7 @@ AED_REAL FUNCTION vH_O3(long, lat, day)
 
    AED_REAL :: A, beta, C, E, F, H, I, phi, lambda
 
-   AED_REAL,PARAMETER :: deg2rad = 3.14159265358979323846 / 180.
+!  AED_REAL,PARAMETER :: deg2rad = 3.14159265358979323846 / 180.
 !
 !-------------------------------------------------------------------------------
 !BEGIN
@@ -384,7 +385,6 @@ SUBROUTINE navy_aerosol_model(AM, WM, W, RH, V, costheta, alpha, beta, F_a, omeg
    omega_a = (-0.0032 * AM + 0.972) * exp(3.06e-2 * relhum)
 END SUBROUTINE navy_aerosol_model
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 
 
 
