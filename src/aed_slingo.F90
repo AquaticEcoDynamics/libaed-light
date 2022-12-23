@@ -171,7 +171,7 @@ END SUBROUTINE slingo
 !###############################################################################
 AED_REAL FUNCTION vH_O3(long, lat, day)
 !-------------------------------------------------------------------------------
-! Van Heuklon (1979) function to account for seasonal and geographical variation 
+! Van Heuklon (1979) function to account for seasonal and geographical variation
 ! in O3. See :
 ! Estimating Atmospheric Ozone for Solar Radiation Models - van Heuklon, T.K. (1979)
 ! "Solar Energy" Vol 22, pp. 63-68
@@ -243,7 +243,7 @@ AED_REAL FUNCTION vH_O3(long, lat, day)
 
     ! From matm-cm to mol m-2 to kg m-2
     vH_O3 = vH_O3 * 0.4462e-3 * 48. / 1000
-  
+
 
 END FUNCTION vH_O3
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -194,7 +194,7 @@ SUBROUTINE calculate_integral_weights(xl, xr, n, x, w)
    !-------------------------------------------------------------------------------
    !BEGIN
       w = 0.
-   
+
       IF (x(1) > xr) THEN
          ! All points to right of desired range.
          w(1) = xr - xl
@@ -204,7 +204,7 @@ SUBROUTINE calculate_integral_weights(xl, xr, n, x, w)
          w(n) =  xr - xl
          return
       ENDIF
-   
+
       DO i = 2, n
          deltax = x(i) - x(i-1)
          IF (x(i) >= xl .and. x(i) <= xr) THEN
@@ -247,5 +247,5 @@ SUBROUTINE calculate_integral_weights(xl, xr, n, x, w)
    END SUBROUTINE calculate_integral_weights
    !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-   
+
 END MODULE aed_maths
