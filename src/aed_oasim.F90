@@ -689,7 +689,7 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       _DIAG_VAR_S_(data%id_zen) = rad2deg * theta
       costheta = cos(theta)
    
-      !print *,'yearday', yearday,days, hour, longitude, latitude, theta, costheta
+      print *,'yearday', yearday,days, hour, longitude, latitude, theta, costheta
    
       ! Atmospheric path length, a.k.a. relative air mass (Eq 3 Bird 1984, Eq 5 Bird & Riordan 1986, Eq 13 Gregg & Carder 1990, Eq A5 in Casey & Gregg 2009)
       ! Note this should always exceed 1, but as it is an approximation it does not near theta -> 0 (Tomasi et al. 1998 p14). Hence the max operator.
