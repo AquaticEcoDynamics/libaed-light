@@ -323,20 +323,31 @@ SUBROUTINE aed_define_oasim(data, namlst)
          data%iops(i_iop)%b_b = 0
       CASE (9) ! Custom carbon-specific absorption and total scattering spectra
          ! NB 12.0107 converts from mg-1 to mmol-1
-!        CALL data%get_parameter(a_star_iop, 'a_star_iop'//trim(strindex), 'm2/mg C', 'carbon-mass-specific absorption coefficient for IOP '//trim(strindex)//' at reference wavelength', minimum=0., default=0.)
+!        CALL data%get_parameter(a_star_iop, 'a_star_iop'//trim(strindex), 'm2/mg C', &
+!                     'carbon-mass-specific absorption coefficient for IOP '//trim(strindex)//' at reference wavelength', &
+!                     minimum=0., default=0.)
+
          IF (a_star_iop /= 0.) THEN
-!           CALL data%get_parameter(lambda_ref_iop, 'lambda_a_iop'//trim(strindex), 'nm', 'reference wavelength for absorption by IOP '//trim(strindex))
-!           CALL data%get_parameter(S_iop, 'S_iop'//trim(strindex), '-', 'exponent of absorption spectrum for IOP '//trim(strindex), minimum=0.)
+!           CALL data%get_parameter(lambda_ref_iop, 'lambda_a_iop'//trim(strindex), 'nm', &
+!                                                 'reference wavelength for absorption by IOP '//trim(strindex))
+!           CALL data%get_parameter(S_iop, 'S_iop'//trim(strindex), '-', &
+!                                                 'exponent of absorption spectrum for IOP '//trim(strindex), minimum=0.)
             data%iops(i_iop)%a(:) = a_star_iop * exp(-S_iop * (data%lambda - lambda_ref_iop)) * 12.0107
          ELSE
             data%iops(i_iop)%a(:) = 0
          ENDIF
 
-!        CALL data%get_parameter(b_star_iop, 'b_star_iop'//trim(strindex), 'm2/mg C', 'carbon-mass-specific scattering coefficient for IOP '//trim(strindex)//' at reference wavelength', minimum=0., default=0.)
+!        CALL data%get_parameter(b_star_iop, 'b_star_iop'//trim(strindex), 'm2/mg C', &
+!                   'carbon-mass-specific scattering coefficient for IOP '//trim(strindex)//' at reference wavelength', &
+!                   minimum=0., default=0.)
+
          IF (b_star_iop /= 0.) THEN
-!           CALL data%get_parameter(lambda_ref_iop, 'lambda_b_iop'//trim(strindex), 'nm', 'reference wavelength for scattering by IOP '//trim(strindex))
-!           CALL data%get_parameter(eta_iop, 'eta_iop'//trim(strindex), '-', 'exponent of scattering spectrum for IOP '//trim(strindex), minimum=0.)
-!           CALL data%get_parameter(data%iops(i_iop)%b_b, 'b_b_iop'//trim(strindex), '-', 'backscattering-to-total-scattering ratio for IOP '//trim(strindex), minimum=0.)
+!           CALL data%get_parameter(lambda_ref_iop, 'lambda_b_iop'//trim(strindex), 'nm', &
+!                                                'reference wavelength for scattering by IOP '//trim(strindex))
+!           CALL data%get_parameter(eta_iop, 'eta_iop'//trim(strindex), '-', &
+!                                                'exponent of scattering spectrum for IOP '//trim(strindex), minimum=0.)
+!           CALL data%get_parameter(data%iops(i_iop)%b_b, 'b_b_iop'//trim(strindex), '-', &
+!                                                'backscattering-to-total-scattering ratio for IOP '//trim(strindex), minimum=0.)
             data%iops(i_iop)%b(:) = b_star_iop * (lambda_ref_iop / data%lambda)**eta_iop * 12.0107
          ELSE
             data%iops(i_iop)%b(:) = 0
@@ -660,7 +671,8 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       wind_speed  = _STATE_VAR_S_(data%id_wind_speed)      ! Wind speed @ 10 m above surface (m/s)
       WM          =  _DIAG_VAR_S_(data%id_mean_wind_speed) ! Daily mean wind speed @ 10 m above surface (m/s)
 
-      AM          = data%air_mass_type !_STATE_VAR_S_(data%id_air_mass_type)   ! Aerosol air mass type (1: open ocean, 10: continental)
+      AM          = data%air_mass_type !_STATE_VAR_S_(data%id_air_mass_type)
+                                       ! Aerosol air mass type (1: open ocean, 10: continental)
       visibility  = data%visibility ! _STATE_VAR_S_(data%id_visibility)     ! Visibility (m)
       airpres     = data%airpres ! _STATE_VAR_S_(data%id_airpres)       ! Surface air pressure (Pa)
       cloud_cover = data%cloud ! _STATE_VAR_S_(data%id_cloud)        ! Cloud cover (fraction, 0-1)
@@ -677,7 +689,10 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       _DIAG_VAR_S_(data%id_wind_out) = wind_speed
       IF (data%id_mean_wind_out > 0) _DIAG_VAR_S_(data%id_mean_wind_out) = WM
 
-      IF (cloud_cover > 0) LWP = LWP / cloud_cover  ! LWP is the mean density over a grid box (Jorn: ECMWF pers comm 26/2/2019), but we want the mean density per cloud-covered area
+      IF (cloud_cover > 0) LWP = LWP / cloud_cover
+      ! LWP is the mean density over a grid box (Jorn: ECMWF pers comm 26/2/2019), but
+      !        we want the mean density per cloud-covered area
+
       WV = water_vapour / 10                        ! from kg m-2 to cm
       O3 = O3 * (1000 / 48.) / 0.4462         ! from kg m-2 to mol m-2, then from mol m-2 to atm cm (Basher 1982)
       days = floor(yearday)
@@ -691,8 +706,10 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
 
       !print *,'yearday', yearday,days, hour, longitude, latitude, theta, costheta
 
-      ! Atmospheric path length, a.k.a. relative air mass (Eq 3 Bird 1984, Eq 5 Bird & Riordan 1986, Eq 13 Gregg & Carder 1990, Eq A5 in Casey & Gregg 2009)
-      ! Note this should always exceed 1, but as it is an approximation it does not near theta -> 0 (Tomasi et al. 1998 p14). Hence the max operator.
+      ! Atmospheric path length, a.k.a. relative air mass (Eq 3 Bird 1984, Eq 5 Bird & Riordan 1986, &
+      !                                        Eq 13 Gregg & Carder 1990, Eq A5 in Casey & Gregg 2009)
+      ! Note this should always exceed 1, but as it is an approximation it does not near &
+      !                                    theta -> 0 (Tomasi et al. 1998 p14). Hence the max operator.
       M = max(1., 1. / (costheta + 0.15 * (93.885 - theta * rad2deg)**(-1.253)))
 
       ! Pressure-corrected atmospheric path length (Eq A6 Casey & Gregg 2009)
@@ -842,11 +859,12 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
          h = _STATE_VAR_(data%id_h)
          f_att_d = exp(-0.5 * (a + b) * h / costheta_r)         ! Gregg & Rousseau 2016 Eq 8
          f_att_s = exp(-0.5 * (a + r_s * b_b) * h / mcosthetas) ! Gregg & Rousseau 2016 Eq 9
-         f_prod_s = exp(-0.5 * a * h / costheta_r) - f_att_d    ! Gregg & Rousseau 2016 Eq 14 but not accounting for backscattered fraction
+         f_prod_s = exp(-0.5 * a * h / costheta_r) - f_att_d    ! Gregg & Rousseau 2016 Eq 14 but not accounting
+                                                                !                     for backscattered fraction
 
          IF (data%save_Kd .and. data%spectral_output /= 0) THEN
             DO l = 1, data%nlambda
-               !Kd(l) = 2 * (log(direct(l) + diffuse(l)) - log(direct(l) * (f_att_d(l) + f_prod_s(l)) + diffuse(l) * f_att_s(l))) / h
+              !Kd(l) = 2 * (log(direct(l) + diffuse(l)) - log(direct(l) * (f_att_d(l) + f_prod_s(l)) + diffuse(l) * f_att_s(l))) / h
                IF (direct(l) + diffuse(l) > 0) THEN
                   ! Direct and diffuse stream
                   dir_frac = direct(l) / (direct(l) + diffuse(l))
@@ -874,7 +892,8 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
          _DIAG_VAR_(data%id_par) = par_J   ! Photosynthetically Active Radiation (W/m2)
          _DIAG_VAR_(data%id_swr) =  swr_J  ! Total shortwave radiation (W/m2) [up to 4000 nm]
          _DIAG_VAR_(data%id_uv) = uv_J     ! UV (W/m2)
-         _DIAG_VAR_(data%id_par_E_dif) = sum(data%par_E_weights * diffuse) ! Diffuse Photosynthetically Active photon flux (umol/m2/s)
+         _DIAG_VAR_(data%id_par_E_dif) = sum(data%par_E_weights * diffuse)
+                                           ! Diffuse Photosynthetically Active photon flux (umol/m2/s)
 
          ! Compute scalar PAR as experienced by phytoplankton
          spectrum = direct / costheta_r + diffuse / mcosthetas
