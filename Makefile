@@ -9,7 +9,7 @@
 #                                                                             #
 #      http://aquatic.science.uwa.edu.au/                                     #
 #                                                                             #
-#  Copyright 2022 -  The University of Western Australia                      #
+#  Copyright 2023 -  The University of Western Australia                      #
 #                                                                             #
 #   AED is free software: you can redistribute it and/or modify               #
 #   it under the terms of the GNU General Public License as published by      #
@@ -115,7 +115,8 @@ OBJS=${objdir}/aed_maths.o \
      ${objdir}/aed_slingo.o \
      ${objdir}/aed_oasim.o \
      ${objdir}/aed_light.o \
-     ${objdir}/aed_lighting.o
+     ${objdir}/aed_lighting.o \
+     ${objdir}/curtin_light.o
 
 all: $(TARGET)
 
