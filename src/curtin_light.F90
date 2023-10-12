@@ -30,12 +30,14 @@ CONTAINS
 
 
 
-SUBROUTINE direct_diffuse_curtin(SWFlux, MaxSWFlux, theta, direct, diffuse, uv, par)
-!-----------------------------------------------------------------------------------
+SUBROUTINE direct_diffuse_curtin(SWFlux, MaxSWFlux, theta, month, met, direct, diffuse, uv, par)
+!-----------------------------------------------------------------------------------------------
 ! INPUT:
 !   SWFlux [W/m2]
 !   MaxSWFlux [W/m2], if negative, use an estimate provided by FUNCTION maxswflux_statistical(theta)
 !   theta [degrees], solar zenith angle in range 5-95 (domain never sees theta<5, above 90 non-zero diffuse)
+!   month [1-12], month of year - not range checked
+!   met ['B' or 'W'], meteorological model, B=BARRA, W=WRF
 ! OUTPUT:
 !   direct [W/m2/nm]
 !   diffuse [W/m2/nm]
@@ -44,10 +46,11 @@ SUBROUTINE direct_diffuse_curtin(SWFlux, MaxSWFlux, theta, direct, diffuse, uv, 
 !-----------------------------------------------------------------------------------
 !ARGUMENTS
    AED_REAL,INTENT(in)  :: SWFlux, MaxSWFlux, theta
+   INTEGER,INTENT(in)          :: month
+   CHARACTER(len=1),INTENT(in) :: met
    AED_REAL,INTENT(out) :: direct(nlambda_5nm_astm), diffuse(nlambda_5nm_astm), uv, par
 
 !LOCALS
-   INTEGER,  parameter :: SUCCESS = 0, FLUXFAIL= 1, SCALEFAIL = 2
    AED_REAL, parameter :: MINSWFLUX = 0.1 ! [W/m2]
    ! Coefficients for solar zenith angle dependence from EcoLight (RADTRAN-X) simulations
    AED_REAL, DIMENSION(5, nlambda_curtin) :: ce, ci, cex, cix ! e is for direct, i is for diffuse
@@ -63,12 +66,12 @@ SUBROUTINE direct_diffuse_curtin(SWFlux, MaxSWFlux, theta, direct, diffuse, uv, 
 
    ! MaxSWFlux < 0 means use a function built from forecast/reanalysis timeseries of SWFlux over the Cockburn Sound domain
    if (MaxSWFlux < 0) then
-      maxflux = maxswflux_statistical(theta)
+      maxflux = maxswflux_statistical(theta, month, met)
    else
       maxflux = MaxSWFlux
    end if
 
-   ! Problem if maxflux or SWFlux tiny, set status flag to 1, all outputs to 0, and return
+   ! Problem if maxflux or SWFlux tiny, set all outputs to 0 and return
    if ((maxflux < MINSWFLUX) .or. (SWFlux < MINSWFLUX)) then
      direct = 0.0
      diffuse = 0.0
@@ -86,8 +89,8 @@ SUBROUTINE direct_diffuse_curtin(SWFlux, MaxSWFlux, theta, direct, diffuse, uv, 
    do i = 2,ntheta_curtin
      muv(i) = muv(i-1) * mu
    end do 
-
-   ! se and si are direct and diffuse that should closely match EcoLight simulations at mesh nodes
+   
+   ! se and si are direct and diffuse that, at mesh nodes, should closely match EcoLight simulations
 
    ! Need clear-sky values even for cloudy skies to use in estimating 1um-4um tail
    ce = reshape(coeff_curtin(:,1,:,1), (/ ntheta_curtin, nlambda_curtin /) )
@@ -179,27 +182,31 @@ END FUNCTION cloud_proportion
 
 
 
-AED_REAL FUNCTION maxswflux_statistical(theta)
-!`````````````````````````````````````````````
-! This function should be reworked using a full year at least of reanalysis data to model maxswflux as function of
-! both solar zenith angle (theta) and day (or month) of year.  The hard-coded coefficients below are OK but not great.
-! One problem is that the max of the function occurs at about 12 degrees, not 0 degrees.  The minimum theta for the
-! Cockburn Sound domain is about 10 degrees (at solar noon on midsummers day).
-! REF: Figure C.
-! 
+AED_REAL FUNCTION maxswflux_statistical(theta, month, met)
+!`````````````````````````````````````````````````````````!
+AED_REAL, parameter :: doy(12) = (/ 15., 45., 74., 105., 135., 166., 196., 227., 258., 288., 319., 349. /)
 !ARGUMENTS
-   AED_REAL,INTENT(in) :: theta ! solar zenith angle in degrees
+   AED_REAL,INTENT(in) :: theta            ! solar zenith angle in degrees
+   INTEGER,INTENT(in)  :: month            ! needs to be in range 1-12, not checked
+   CHARACTER(len=1),INTENT(in) :: met      ! 'B' for BARRA, else 'W' for WRF is assumed
 !LOCALS
-   TYPE(AED_REAL)              :: t
+   TYPE(AED_REAL)              :: t, mu, f
 !BEGIN
    if (theta<5) then
      t = 5 ! you should throw a warning, for the Cockburn Sound domain this ought not occur
-   else if (theta>98) then
-     t = 98 ! no warning needed, just night-time, will evaluate -ve and get set to zero
+   else if (theta>100) then
+     t = 100 ! no warning needed, just night-time, at worst will evaluate -ve and get set to zero
    else
      t = theta
    end if
-   maxswflux_statistical = 1049.867 + (11.71388 - (0.5307591 - 0.003080567*t)*t)*t
+   mu = cos(t*deg2rad)
+   if (met=='B') then
+     maxswflux_statistical = 44.0329 + (493.04213 + (1226.9471 - 632.4993*mu)*mu)*mu  ! BARRA
+   else
+     maxswflux_statistical = 0.868905 + (902.6874 + (492.08104 - 239.7974*mu)*mu)*mu  ! WRF
+   end if
+   f = (1 + 0.034 * cos(2.*pi*doy(month)/365.)) / 1.03287 ! scaling factor for month of year
+   maxswflux_statistical = f * maxswflux_statistical
    if (maxswflux_statistical < 0) maxswflux_statistical = 0
 END FUNCTION maxswflux_statistical
 
