@@ -59,7 +59,7 @@ SUBROUTINE direct_diffuse_curtin(SWFlux, MaxSWFlux, theta, month, met, direct, d
    AED_REAL, DIMENSION(nlambda_5nm_astm)  :: es, taug
    INTEGER                                :: i, i1, i2
    AED_REAL,DIMENSION(ntheta_curtin)      :: muv
-   TYPE(AED_REAL)                         :: maxflux, mu, swflux_ratio, cloud_index, prop, flux_curtin, ratio, const, tranc
+   AED_REAL                               :: maxflux, mu, swflux_ratio, cloud_index, prop, flux_curtin, ratio, const, tranc
 
 !------------------------------------------------------------------------------------
 !BEGIN
@@ -173,7 +173,7 @@ AED_REAL FUNCTION cloud_proportion(swflux_ratio)
 !ARGUMENTS
    AED_REAL,INTENT(in) :: swflux_ratio
 !LOCALS
-   TYPE(AED_REAL)      :: r
+   AED_REAL      :: r
 !BEGIN
    r = swflux_ratio
    if (r<0.25) r=0.25
@@ -190,7 +190,7 @@ AED_REAL, parameter :: doy(12) = (/ 15., 45., 74., 105., 135., 166., 196., 227.,
    INTEGER,INTENT(in)  :: month            ! needs to be in range 1-12, not checked
    CHARACTER(len=1),INTENT(in) :: met      ! 'B' for BARRA, else 'W' for WRF is assumed
 !LOCALS
-   TYPE(AED_REAL)              :: t, mu, f
+   AED_REAL              :: t, mu, f
 !BEGIN
    if (theta<5) then
      t = 5 ! you should throw a warning, for the Cockburn Sound domain this ought not occur
