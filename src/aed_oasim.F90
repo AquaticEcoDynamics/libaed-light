@@ -84,6 +84,7 @@ MODULE aed_oasim
       AED_REAL,DIMENSION(:),ALLOCATABLE :: a  ! specific absorption (m-1 concentration-1)
       AED_REAL,DIMENSION(:),ALLOCATABLE :: b  ! specific total scattering (m-1 concentration-1)
       AED_REAL :: b_b                         ! ratio of backscattering to total scattering (dimensionless)
+      AED_REAL :: b_p                         ! ratio of backscattering to total scattering (dimensionless)
    END TYPE
 !
    TYPE,extends(aed_model_data_t) :: aed_oasim_data_t
@@ -284,6 +285,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
          CALL interp(size(lambda_diatoms), lambda_diatoms, a_diatoms, nlambda, data%lambda, data%iops(i_iop)%a)
          CALL interp(size(lambda_diatoms), lambda_diatoms, b_diatoms, nlambda, data%lambda, data%iops(i_iop)%b)
          data%iops(i_iop)%b_b = 0.002 ! Gregg & Rousseau 2016 but originally Morel 1988
+         data%iops(i_iop)%b_p = 1.0 !JIM
       CASE (2)  ! chlorophytes
          CALL interp(size(lambda_chlorophytes), lambda_chlorophytes, a_chlorophytes, nlambda, data%lambda, data%iops(i_iop)%a)
          CALL interp(size(lambda_chlorophytes), lambda_chlorophytes, b_chlorophytes, nlambda, data%lambda, data%iops(i_iop)%b)
@@ -324,6 +326,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
          data%iops(i_iop)%a(:) = 2.98e-4 * exp(-0.014 * (data%lambda - 443)) * 12.0107
          data%iops(i_iop)%b(:) = 0
          data%iops(i_iop)%b_b = 0
+         data%iops(i_iop)%b_p = 1.0 !JIM
       CASE (9)  ! Custom carbon-specific absorption and total scattering spectra
          ! NB 12.0107 converts from mg-1 to mmol-1
 !        CALL data%get_parameter(a_star_iop, 'a_star_iop'//trim(strindex), 'm2/mg C', &
@@ -356,6 +359,16 @@ SUBROUTINE aed_define_oasim(data, namlst)
             data%iops(i_iop)%b(:) = 0
             data%iops(i_iop)%b_b = 0
          ENDIF
+      CASE (10) ! he6chl==gordon-morel !JIM
+         CALL interp(size(lambda_he6chl ), lambda_he6chl, a_he6chl, nlambda, data%lambda, data%iops(i_iop)%a)
+         CALL interp(size(lambda_he6chl ), lambda_he6chl, b_he6chl, nlambda, data%lambda, data%iops(i_iop)%b)
+         data%iops(i_iop)%b_b = 0.02
+         data%iops(i_iop)%b_p = 0.795 
+      CASE (11) ! a_Averagesediment !JIM
+         CALL interp(size(lambda_Averagesediment ), lambda_Averagesediment, a_Averagesediment, nlambda, data%lambda, data%iops(i_iop)%a)
+         CALL interp(size(lambda_Averagesediment ), lambda_Averagesediment, b_Averagesediment, nlambda, data%lambda, data%iops(i_iop)%b)
+         data%iops(i_iop)%b_b = 0.01
+         data%iops(i_iop)%b_p = 1.0
       END SELECT
 
       ! Protect against negative coefficients caused by extrapolation beyond source spectrum boundaries.
@@ -698,6 +711,8 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
          _DIAG_VAR_S_(data%id_O3) = O3
       ENDIF
 
+print *,'yearday',yearday,latitude
+
       !-----------------------------------------------------------------------------------------------
       ! Adjustments and diagnostic outputs for debugging
       _DIAG_VAR_S_(data%id_wind_out) = wind_speed
@@ -718,6 +733,8 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       _DIAG_VAR_S_(data%id_zen) = rad2deg * theta
       costheta = cos(theta)
 
+      print *, 'ss',days, hour, longitude, latitude, theta
+      
       !-----------------------------------------------------------------------------------------------
       ! Compute incoming spectral irradiance based on atmospheric properties
       IF(data%sky_model == 1) THEN 
@@ -824,8 +841,6 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
          par_J = sum(data%par_weights   * spectrum)
          par_E = sum(data%par_E_weights * spectrum)
          
-         print *,'SKY'
-         print *,'SKY',swr_J,theta,SWFlux,days, hour
          !print *,'lambda_5nm_astm',lambda_5nm_astm
          !print *,'diffuse_5nm',diffuse_5nm
          !print *,'direct_5nm',direct_5nm
@@ -904,9 +919,13 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
                   _DIAG_VAR_(data%id_a_iop(l, i_iop)) = spectrum_out(l)
                ENDDO
             END SELECT
+            !JIM a = a + a_iop
+            !JIM b = b + c_iop * data%iops(i_iop)%b
+            !JIM b_b = b_b + c_iop * data%iops(i_iop)%b_b * data%iops(i_iop)%b
             a = a + a_iop
-            b = b + c_iop * data%iops(i_iop)%b
-            b_b = b_b + c_iop * data%iops(i_iop)%b_b * data%iops(i_iop)%b
+            c_eff = c_iop ** data%iops(i_iop)%b_p
+            b = b + c_eff * data%iops(i_iop)%b
+            b_b = b_b + c_eff * data%iops(i_iop)%b_b * data%iops(i_iop)%b
          ENDDO
 
          ! Transmissivity of direct/diffuse attentuation and conversion from direct to diffuse - for one half of the layer
