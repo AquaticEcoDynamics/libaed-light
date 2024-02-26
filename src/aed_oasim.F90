@@ -369,6 +369,26 @@ SUBROUTINE aed_define_oasim(data, namlst)
          CALL interp(size(lambda_Averagesediment ), lambda_Averagesediment, b_Averagesediment, nlambda, data%lambda, data%iops(i_iop)%b)
          data%iops(i_iop)%b_b = 0.01
          data%iops(i_iop)%b_p = 1.0
+      CASE (12) ! a_Brownearth !JIM
+         CALL interp(size(lambda_Brownearth ), lambda_Brownearth, a_Brownearth, nlambda, data%lambda, data%iops(i_iop)%a)
+         CALL interp(size(lambda_Brownearth ), lambda_Brownearth, b_Brownearth, nlambda, data%lambda, data%iops(i_iop)%b)
+         data%iops(i_iop)%b_b = 0.01
+         data%iops(i_iop)%b_p = 1.0
+      CASE (13) ! a_Calcareoussand !JIM
+         CALL interp(size(lambda_Calcareoussand ), lambda_Calcareoussand, a_Calcareoussand, nlambda, data%lambda, data%iops(i_iop)%a)
+         CALL interp(size(lambda_Calcareoussand ), lambda_Calcareoussand, b_Calcareoussand, nlambda, data%lambda, data%iops(i_iop)%b)
+         data%iops(i_iop)%b_b = 0.01
+         data%iops(i_iop)%b_p = 1.0
+      CASE (14) ! a_Averagesediment !JIM
+         CALL interp(size(lambda_Redclay ), lambda_Redclay, a_Redclay, nlambda, data%lambda, data%iops(i_iop)%a)
+         CALL interp(size(lambda_Redclay ), lambda_Redclay, b_Redclay, nlambda, data%lambda, data%iops(i_iop)%b)
+         data%iops(i_iop)%b_b = 0.01
+         data%iops(i_iop)%b_p = 1.0
+      CASE (15) ! a_Averagesediment !JIM
+         CALL interp(size(lambda_Yellowclay ), lambda_Yellowclay, a_Yellowclay, nlambda, data%lambda, data%iops(i_iop)%a)
+         CALL interp(size(lambda_Yellowclay ), lambda_Yellowclay, b_Yellowclay, nlambda, data%lambda, data%iops(i_iop)%b)
+         data%iops(i_iop)%b_b = 0.01
+         data%iops(i_iop)%b_p = 1.0
       END SELECT
 
       ! Protect against negative coefficients caused by extrapolation beyond source spectrum boundaries.
@@ -676,6 +696,7 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       INTEGER  :: i_iop
       AED_REAL :: c_iop, h, swr_top, costheta_r, dir_frac
       AED_REAL :: SWFLUX, MaxSWFlux
+      AED_REAL :: c_eff
       INTEGER  :: month
       CHARACTER(len=1):: met
 
