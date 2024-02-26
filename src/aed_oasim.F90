@@ -281,134 +281,129 @@ SUBROUTINE aed_define_oasim(data, namlst)
       write(strindex, '(i0)') i_iop
 
       SELECT CASE (iop_type(i_iop))
-      CASE (1)  ! diatoms
+      CASE (1)  ! DIATOMS
          CALL interp(size(lambda_diatoms), lambda_diatoms, a_diatoms, nlambda, data%lambda, data%iops(i_iop)%a)
          CALL interp(size(lambda_diatoms), lambda_diatoms, b_diatoms, nlambda, data%lambda, data%iops(i_iop)%b)
          data%iops(i_iop)%b_b = 0.002 ! Gregg & Rousseau 2016 but originally Morel 1988
-         data%iops(i_iop)%b_p = 1.0 !JIM
-      CASE (2)  ! chlorophytes
+         data%iops(i_iop)%b_p = 1.0   ! JIM
+      CASE (2)  ! CHLOROPHYTES
          CALL interp(size(lambda_chlorophytes), lambda_chlorophytes, a_chlorophytes, nlambda, data%lambda, data%iops(i_iop)%a)
          CALL interp(size(lambda_chlorophytes), lambda_chlorophytes, b_chlorophytes, nlambda, data%lambda, data%iops(i_iop)%b)
          data%iops(i_iop)%b_b = 0.00071 * 10 ! Note: 10x Ahn et al. 1992 as reported in Gregg & Rousseau 2016
-      CASE (3)  ! cyanobacteria
+         data%iops(i_iop)%b_p = 1.0
+      CASE (3)  ! CYANOBACTERIA
          CALL interp(size(lambda_cyanobacteria), lambda_cyanobacteria, a_cyanobacteria, nlambda, data%lambda, data%iops(i_iop)%a)
          CALL interp(size(lambda_cyanobacteria), lambda_cyanobacteria, b_cyanobacteria, nlambda, data%lambda, data%iops(i_iop)%b)
          data%iops(i_iop)%b_b = 0.0032 ! Gregg & Rousseau 2016 but originally Ahn et al. 1992
-      CASE (4)  ! coccolithophorids
+         data%iops(i_iop)%b_p = 1.0
+      CASE (4)  ! COCCOLITHOPHORIDS 
          CALL interp(size(lambda_coccolithophores), lambda_coccolithophores, a_coccolithophores, &
                                                                              nlambda, data%lambda, data%iops(i_iop)%a)
          CALL interp(size(lambda_coccolithophores), lambda_coccolithophores, b_coccolithophores, &
                                                                              nlambda, data%lambda, data%iops(i_iop)%b)
          data%iops(i_iop)%b_b = 0.00071 * 10 ! Note: 10x Morel 1988 as reported in Gregg & Rousseau 2016
-      CASE (5)  ! dinoflagellates
+         data%iops(i_iop)%b_p = 1.0
+      CASE (5)  ! DINOFLAGELLATES
          CALL interp(size(lambda_dinoflagellates), lambda_dinoflagellates, a_dinoflagellates, &
                                                                              nlambda, data%lambda, data%iops(i_iop)%a)
          CALL interp(size(lambda_dinoflagellates), lambda_dinoflagellates, b_dinoflagellates, &
                                                                              nlambda, data%lambda, data%iops(i_iop)%b)
          data%iops(i_iop)%b_b = 0.0029 ! Gregg & Rousseau 2016 but originally Morel 1988
-      CASE (6)  ! detritus (small, as described in Gregg & Rousseau 2016)
-         ! Parameters below match the small organic detritus parametrization of Gallegos et al. 2011 (table 2)
-         !  - the latter also offers a parametrizaton for large detritus.
-         ! Note: Gallegos et al. 2011 constants are specific to dry weight! Did Gregg & Rousseau 2016
-         !  misinterpret them as specific to carbon weight?
-         ! If so: Babin et al 2003 state 2.6 g DW per g C is representative for suspended OM
-         ! NB 12.0107 converts from mg-1 to mmol-1
-         ! JB 14/1/2019: adding factor 2.6 (DW/C) discussed above as that seems like to make L4/WCO match much better.
+         data%iops(i_iop)%b_p = 1.0
+      CASE (6)  ! DETRITUS (small, as described in Gregg & Rousseau 2016)
+         ! Parameters below match the small organic detritus parametrization of Gallegos et al. 2011 (Table 2)
+         !  - the latter also offers a parametrizaton for large detritus. Note: Gallegos et al. 2011 constants 
+         !    are specific to dry weight! Did Gregg & Rousseau 2016 misinterpret them as specific to carbon weight?
+         !    If so: Babin et al 2003 state 2.6 g DW per g C is representative for suspended OM, Bruggeman pers com
+         !    notes adding factor 2.6 (DW/C) seems like to make L4/WCO match much better
+         !    Also, note that 12.0107 converts from mg-1 to mmol-1
          data%iops(i_iop)%a(:) = 8e-5 * exp(-0.013 * (data%lambda - 440)) * 12.0107 * 2.6
          data%iops(i_iop)%b(:) = 0.00115 * (550. / data%lambda)**0.5 * 12.0107 * 2.6
          data%iops(i_iop)%b_b = 0.005
+         data%iops(i_iop)%b_p = 1.0
      !CASE (7)  ! PIC
      !   data%iops(i_iop)%a(:) = 0
      !   CALL interp(size(), lambda_w, a_w, nlambda, data%lambda, data%iops(i_iop)%b)
      !   data%iops(i_iop)%b_b = 0.01
+     !   data%iops(i_iop)%b_p = 1.0
       CASE (8) !  CDOC
-         ! NB 12.0107 converts from mg-1 to mmol-1
+         ! Note that 12.0107 converts from mg-1 to mmol-1  
          data%iops(i_iop)%a(:) = 2.98e-4 * exp(-0.014 * (data%lambda - 443)) * 12.0107
          data%iops(i_iop)%b(:) = 0
          data%iops(i_iop)%b_b = 0
-         data%iops(i_iop)%b_p = 1.0 !JIM
-      CASE (9)  ! Custom carbon-specific absorption and total scattering spectra
-         ! NB 12.0107 converts from mg-1 to mmol-1
-!        CALL data%get_parameter(a_star_iop, 'a_star_iop'//trim(strindex), 'm2/mg C', &
-!                     'carbon-mass-specific absorption coefficient for IOP '//trim(strindex)//' at reference wavelength', &
-!                     minimum=0., default=0.)
-
+         data%iops(i_iop)%b_p = 1.0 
+      CASE (9) ! HE6CHL (gordon-morel) 
+         CALL interp(size(lambda_he6chl ), lambda_he6chl, a_he6chl, nlambda, data%lambda, data%iops(i_iop)%a)
+         CALL interp(size(lambda_he6chl ), lambda_he6chl, b_he6chl, nlambda, data%lambda, data%iops(i_iop)%b)
+         data%iops(i_iop)%b_b = 0.02
+         data%iops(i_iop)%b_p = 0.795 
+      CASE (10) ! AVERAGE SEDIMENT
+         CALL interp(size(lambda_Averagesediment ), lambda_Averagesediment, a_Averagesediment, nlambda, data%lambda, data%iops(i_iop)%a)
+         CALL interp(size(lambda_Averagesediment ), lambda_Averagesediment, b_Averagesediment, nlambda, data%lambda, data%iops(i_iop)%b)
+         data%iops(i_iop)%b_b = 0.01
+         data%iops(i_iop)%b_p = 1.0
+      CASE (11) ! BROWN EARTH
+         CALL interp(size(lambda_Brownearth ), lambda_Brownearth, a_Brownearth, nlambda, data%lambda, data%iops(i_iop)%a)
+         CALL interp(size(lambda_Brownearth ), lambda_Brownearth, b_Brownearth, nlambda, data%lambda, data%iops(i_iop)%b)
+         data%iops(i_iop)%b_b = 0.01
+         data%iops(i_iop)%b_p = 1.0
+      CASE (12) ! CALCEROUS SAND
+         CALL interp(size(lambda_Calcareoussand ), lambda_Calcareoussand, a_Calcareoussand, nlambda, data%lambda, data%iops(i_iop)%a)
+         CALL interp(size(lambda_Calcareoussand ), lambda_Calcareoussand, b_Calcareoussand, nlambda, data%lambda, data%iops(i_iop)%b)
+         data%iops(i_iop)%b_b = 0.01
+         data%iops(i_iop)%b_p = 1.0
+      CASE (13) ! RED CLAY
+         CALL interp(size(lambda_Redclay ), lambda_Redclay, a_Redclay, nlambda, data%lambda, data%iops(i_iop)%a)
+         CALL interp(size(lambda_Redclay ), lambda_Redclay, b_Redclay, nlambda, data%lambda, data%iops(i_iop)%b)
+         data%iops(i_iop)%b_b = 0.01
+         data%iops(i_iop)%b_p = 1.0
+      CASE (14) ! YELLOW CLAY
+         CALL interp(size(lambda_Yellowclay ), lambda_Yellowclay, a_Yellowclay, nlambda, data%lambda, data%iops(i_iop)%a)
+         CALL interp(size(lambda_Yellowclay ), lambda_Yellowclay, b_Yellowclay, nlambda, data%lambda, data%iops(i_iop)%b)
+         data%iops(i_iop)%b_b = 0.01
+         data%iops(i_iop)%b_p = 1.0
+      CASE (99)  ! CUSTOM (carbon-specific absorption and total scattering spectra)
+         ! Note that 12.0107 converts from mg-1 to mmol-1
+         !   get_parameter(a_star_iop, 'a_star_iop'//trim(strindex), 'm2/mg C', &
+         !                 'carbon-mass-specific absorption coefficient for IOP '//trim(strindex)//' at reference wavelength', minimum=0., default=0.)
          IF (a_star_iop /= 0.) THEN
-!           CALL data%get_parameter(lambda_ref_iop, 'lambda_a_iop'//trim(strindex), 'nm', &
-!                                                 'reference wavelength for absorption by IOP '//trim(strindex))
-!           CALL data%get_parameter(S_iop, 'S_iop'//trim(strindex), '-', &
-!                                                 'exponent of absorption spectrum for IOP '//trim(strindex), minimum=0.)
+         !    get_parameter(lambda_ref_iop, 'lambda_a_iop'//trim(strindex), 'nm', &
+         !                 'reference wavelength for absorption by IOP '//trim(strindex))
+         !    get_parameter(S_iop, 'S_iop'//trim(strindex), '-', &
+         !                 'exponent of absorption spectrum for IOP '//trim(strindex), minimum=0.)
             data%iops(i_iop)%a(:) = a_star_iop * exp(-S_iop * (data%lambda - lambda_ref_iop)) * 12.0107
          ELSE
             data%iops(i_iop)%a(:) = 0
          ENDIF
 
-!        CALL data%get_parameter(b_star_iop, 'b_star_iop'//trim(strindex), 'm2/mg C', &
-!                   'carbon-mass-specific scattering coefficient for IOP '//trim(strindex)//' at reference wavelength', &
-!                   minimum=0., default=0.)
-
+         !  get_parameter(b_star_iop, 'b_star_iop'//trim(strindex), 'm2/mg C', &
+         !                'carbon-mass-specific scattering coefficient for IOP '//trim(strindex)//' at reference wavelength', minimum=0., default=0.)
          IF (b_star_iop /= 0.) THEN
-!           CALL data%get_parameter(lambda_ref_iop, 'lambda_b_iop'//trim(strindex), 'nm', &
-!                                                'reference wavelength for scattering by IOP '//trim(strindex))
-!           CALL data%get_parameter(eta_iop, 'eta_iop'//trim(strindex), '-', &
-!                                                'exponent of scattering spectrum for IOP '//trim(strindex), minimum=0.)
-!           CALL data%get_parameter(data%iops(i_iop)%b_b, 'b_b_iop'//trim(strindex), '-', &
-!                                                'backscattering-to-total-scattering ratio for IOP '//trim(strindex), minimum=0.)
+         !    get_parameter(lambda_ref_iop, 'lambda_b_iop'//trim(strindex), 'nm', &
+         !                  'reference wavelength for scattering by IOP '//trim(strindex))
+         !    get_parameter(eta_iop, 'eta_iop'//trim(strindex), '-', &
+         !                  'exponent of scattering spectrum for IOP '//trim(strindex), minimum=0.)
+         !    get_parameter(data%iops(i_iop)%b_b, 'b_b_iop'//trim(strindex), '-', &
+         !                  'backscattering-to-total-scattering ratio for IOP '//trim(strindex), minimum=0.)
             data%iops(i_iop)%b(:) = b_star_iop * (lambda_ref_iop / data%lambda)**eta_iop * 12.0107
          ELSE
             data%iops(i_iop)%b(:) = 0
             data%iops(i_iop)%b_b = 0
          ENDIF
-      CASE (10) ! he6chl==gordon-morel !JIM
-         CALL interp(size(lambda_he6chl ), lambda_he6chl, a_he6chl, nlambda, data%lambda, data%iops(i_iop)%a)
-         CALL interp(size(lambda_he6chl ), lambda_he6chl, b_he6chl, nlambda, data%lambda, data%iops(i_iop)%b)
-         data%iops(i_iop)%b_b = 0.02
-         data%iops(i_iop)%b_p = 0.795 
-      CASE (11) ! a_Averagesediment !JIM
-         CALL interp(size(lambda_Averagesediment ), lambda_Averagesediment, a_Averagesediment, nlambda, data%lambda, data%iops(i_iop)%a)
-         CALL interp(size(lambda_Averagesediment ), lambda_Averagesediment, b_Averagesediment, nlambda, data%lambda, data%iops(i_iop)%b)
-         data%iops(i_iop)%b_b = 0.01
-         data%iops(i_iop)%b_p = 1.0
-      CASE (12) ! a_Brownearth !JIM
-         CALL interp(size(lambda_Brownearth ), lambda_Brownearth, a_Brownearth, nlambda, data%lambda, data%iops(i_iop)%a)
-         CALL interp(size(lambda_Brownearth ), lambda_Brownearth, b_Brownearth, nlambda, data%lambda, data%iops(i_iop)%b)
-         data%iops(i_iop)%b_b = 0.01
-         data%iops(i_iop)%b_p = 1.0
-      CASE (13) ! a_Calcareoussand !JIM
-         CALL interp(size(lambda_Calcareoussand ), lambda_Calcareoussand, a_Calcareoussand, nlambda, data%lambda, data%iops(i_iop)%a)
-         CALL interp(size(lambda_Calcareoussand ), lambda_Calcareoussand, b_Calcareoussand, nlambda, data%lambda, data%iops(i_iop)%b)
-         data%iops(i_iop)%b_b = 0.01
-         data%iops(i_iop)%b_p = 1.0
-      CASE (14) ! a_Averagesediment !JIM
-         CALL interp(size(lambda_Redclay ), lambda_Redclay, a_Redclay, nlambda, data%lambda, data%iops(i_iop)%a)
-         CALL interp(size(lambda_Redclay ), lambda_Redclay, b_Redclay, nlambda, data%lambda, data%iops(i_iop)%b)
-         data%iops(i_iop)%b_b = 0.01
-         data%iops(i_iop)%b_p = 1.0
-      CASE (15) ! a_Averagesediment !JIM
-         CALL interp(size(lambda_Yellowclay ), lambda_Yellowclay, a_Yellowclay, nlambda, data%lambda, data%iops(i_iop)%a)
-         CALL interp(size(lambda_Yellowclay ), lambda_Yellowclay, b_Yellowclay, nlambda, data%lambda, data%iops(i_iop)%b)
-         data%iops(i_iop)%b_b = 0.01
          data%iops(i_iop)%b_p = 1.0
       END SELECT
 
-      ! Protect against negative coefficients caused by extrapolation beyond source spectrum boundaries.
-      data%iops(i_iop)%a(:) = max(data%iops(i_iop)%a, 0.)
-      data%iops(i_iop)%b(:) = max(data%iops(i_iop)%b, 0.)
+      ! Protect against -ve coefficients caused by extrapolation beyond source spectrum boundaries
+      data%iops(i_iop)%a(:) = max( data%iops(i_iop)%a, zero_ )
+      data%iops(i_iop)%b(:) = max( data%iops(i_iop)%b, zero_ )
 
       ! Link to concentration metric to allow us to convert *specific* absorption/scattering into
       ! actual absorption and scattering (in m-1)
       IF (iop_type(i_iop) >=1 .and. iop_type(i_iop) <= 5) THEN
          ! Phytoplankton: chlorophyll-specific absorption and scattering
-!         data%iops(i_iop)%id_c = aed_define_variable('iop' // trim(strindex) // '_chl', 'mg Chl m-3', &
-!                                                                             'chlorophyll in IOP ' // trim(strindex))
-!        CALL data%request_coupling_to_model(data%iops(i_iop)%id_c, 'iop' // trim(strindex), &
-!                                                                            type_bulk_standard_variable(name='total_chlorophyll'))
          data%iops(i_iop)%id_c = aed_locate_variable(TRIM(iop_link(i_iop)))
       ELSE
          ! POM/DOM/PIC: carbon-specific absorption and scattering
-!         data%iops(i_iop)%id_c = aed_define_variable('iop' // trim(strindex) // '_c', &
-!                                                                             'mmol C m-3', 'carbon in IOP ' // trim(strindex))
-!        CALL data%request_coupling_to_model(data%iops(i_iop)%id_c, 'iop' // trim(strindex), standard_variables%total_carbon)
          data%iops(i_iop)%id_c = aed_locate_variable(TRIM(iop_link(i_iop)))
       ENDIF
    ENDDO
@@ -422,7 +417,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
    CALL calculate_integral_weights(300., 4000., nlambda, data%lambda, data%swr_weights)
    CALL calculate_integral_weights(300.,  400., nlambda, data%lambda, data%uv_weights )
    data%par_E_weights(:) = data%par_weights * data%lambda /(Planck*lightspeed)/Avogadro*1e-3
-                                        ! divide by 1e9 to go from nm to m, multiply by 1e6 to go from mol to umol
+                             ! divide by 1e9 to go from nm to m, multiply by 1e6 to go from mol to umol
    
    ! Find and link to environmental variables, from host
    data%id_lon        = aed_locate_global('longitude')
@@ -440,36 +435,20 @@ SUBROUTINE aed_define_oasim(data, namlst)
    ! data%id_WV = aed_locate_sheet_global('WV ')
    ! data%id_visibility = aed_locate_sheet_global('visibility')
    ! data%id_air_mass_type = aed_locate_sheet_global('air_mass_type')
+!! MAKE PARAM CAB ?
+!!  data%id_cloud = aed_locate_sheet_global('cloud_area_fraction')
+!!  data%id_airpres = aed_locate_sheet_global('surface_air_pressure')
+!!  data%id_lwp = aed_locate_sheet_global('atmosphere_mass_content_of_cloud_liquid_water')
+!!  data%id_WV = aed_locate_sheet_global('atmosphere_mass_content_of_water_vapor')
+!!  data%id_visibility = aed_locate_sheet_global('visibility_in_air')
+!!  data%id_air_mass_type = aed_locate_sheet_global('aerosol_air_mass_type')
+
 
    ! Allocate necesary diagnostics
 
    ! Constant OR Van Heuklon (1979) function to account for seasonal / geographical variation in O3
    data%id_O3 = 0  !  data%id_O3 = aed_locate_sheet_global('atmosphere_mass_content_of_ozone')
    IF(ozone) data%id_O3 = aed_define_sheet_diag_variable('ozone', 'kg/m2', 'atmosphere_mass_content_of_ozone')
-
-!! MAKE PARAM CAB ?
-!!  data%id_cloud = aed_locate_sheet_global('cloud_area_fraction')
-!   data%id_cloud = aed_define_sheet_diag_variable('cloud_area_fraction', '-', '-')
-!! MAKE PARAM CAB ?
-!!  data%id_airpres = aed_locate_sheet_global('surface_air_pressure')
-!   data%id_airpres = aed_define_sheet_diag_variable('surface_air_pressure', '-', '-')
-!! MAKE PARAM CAB ?
-!!  data%id_yearday = aed_locate_sheet_global('number_of_days_since_start_of_the_year')
-!   data%id_yearday = aed_define_sheet_diag_variable('number_of_days_since_start_of_the_year', '-', '-')
-!
-!! MAKE PARAM CAB ?
-!!  data%id_lwp = aed_locate_sheet_global('atmosphere_mass_content_of_cloud_liquid_water')
-!   data%id_lwp = aed_define_sheet_diag_variable('atmosphere_mass_content_of_cloud_liquid_water', '-', '-')
-!! MAKE PARAM CAB ?
-!! MAKE PARAM CAB ?
-!!  data%id_WV = aed_locate_sheet_global('atmosphere_mass_content_of_water_vapor')
-!   data%id_WV = aed_define_sheet_diag_variable('atmosphere_mass_content_of_water_vapor', '-', '-')
-!! MAKE PARAM CAB ?
-!!  data%id_visibility = aed_locate_sheet_global('visibility_in_air')
-!   data%id_visibility = aed_define_sheet_diag_variable('visibility_in_air', '-', '-')
-!! MAKE PARAM CAB ?
-!!  data%id_air_mass_type = aed_locate_sheet_global('aerosol_air_mass_type')
-!   data%id_air_mass_type = aed_define_sheet_diag_variable('aerosol_air_mass_type', '-', '-')
 
    IF (compute_mean_wind) THEN
       data%id_mean_wind_out = aed_define_sheet_diag_variable('mean_wind', 'm/s', 'daily mean wind speed')
@@ -553,13 +532,14 @@ SUBROUTINE aed_define_oasim(data, namlst)
       ENDIF
    ENDDO
 
-   !data%l490_l = nlambda - 1
-   !DO l = 1, nlambda - 1
-   !   IF (data%lambda(l) >= 490.) THEN
-   !      data%l490_l = l
-   !      exit
-   !   ENDIF
-   !ENDDO
+   ! Find lambda index for 490nm (e.g. for secchi)
+   data%l490_l = nlambda - 1
+   DO l = 1, nlambda - 1
+      IF (data%lambda(l) >= 490.) THEN
+         data%l490_l = l
+         exit
+      ENDIF
+   ENDDO
    
    ! Setup output configuration
    data%save_Kd = save_Kd
@@ -694,10 +674,10 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       AED_REAL,DIMENSION(data%nlambda) :: f_att_d, f_att_s, f_prod_s
       AED_REAL, allocatable :: spectrum_out(:)
       INTEGER  :: i_iop
-      AED_REAL :: c_iop, h, swr_top, costheta_r, dir_frac
+      AED_REAL :: c_iop, h, swr_top, l490_sf, costheta_r, dir_frac
       AED_REAL :: SWFLUX, MaxSWFlux
-      AED_REAL :: c_eff
-      INTEGER  :: month
+      AED_REAL :: c_eff, atten_frac, Kd490avg
+      INTEGER  :: month, secchi_botlayer
       CHARACTER(len=1):: met
 
 
@@ -732,7 +712,6 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
          _DIAG_VAR_S_(data%id_O3) = O3
       ENDIF
 
-print *,'yearday',yearday,latitude
 
       !-----------------------------------------------------------------------------------------------
       ! Adjustments and diagnostic outputs for debugging
@@ -913,15 +892,17 @@ print *,'yearday',yearday,latitude
       _DIAG_VAR_S_(data%id_uv_sf_w) = uv_J     ! UV (W/m2)
 
 
-
+      l490_sf = swr_J * data%swr_weights(data%l490_l)
+      secchi_botlayer = 1
+      
       !-----------------------------------------------------------------------------------------------
       ! Now loop down through the water column
       DO layer = 1,SIZE(layer_map)
       
          layer_idx = layer_map(layer)
          
-         ! Save downwelling shortwave flux at top of the layer
-         swr_top = swr_J
+         ! Save downwelling shortwave flux (and 490nm) at top of the layer
+         swr_top = swr_J   
 
          ! Compute absorption, total scattering and backscattering in current layer from IOPs
          a = data%a_w ; b = data%b_w
@@ -940,7 +921,6 @@ print *,'yearday',yearday,latitude
                   _DIAG_VAR_(data%id_a_iop(l, i_iop)) = spectrum_out(l)
                ENDDO
             END SELECT
-            !JIM a = a + a_iop
             !JIM b = b + c_iop * data%iops(i_iop)%b
             !JIM b_b = b_b + c_iop * data%iops(i_iop)%b_b * data%iops(i_iop)%b
             a = a + a_iop
@@ -957,24 +937,28 @@ print *,'yearday',yearday,latitude
                                                                 !                     for backscattered fraction
 
          IF (data%save_Kd .and. data%spectral_output /= 0) THEN
+            Kd490avg = zero_
             DO l = 1, data%nlambda
               !Kd(l) = 2 * (log(direct(l) + diffuse(l)) - log(direct(l) * (f_att_d(l) + f_prod_s(l)) + diffuse(l) * f_att_s(l))) / h
                IF (direct(l) + diffuse(l) > 0) THEN
-                  ! Direct and diffuse stream
+                  ! Direct and diffuse stream 
                   dir_frac = direct(l) / (direct(l) + diffuse(l))
                   Kd(l) = - 2 *log(dir_frac * (f_att_d(l) + f_prod_s(l)) + (1.0 - dir_frac) * f_att_s(l)) / h
                ELSE
                   ! Only diffuse stream
                   Kd(l) = (a(l) + r_s * b_b(l)) / mcosthetas
                ENDIF
+               IF(l==data%l490_l) THEN 
+                  ! increment Kd490 with this layers properties
+                  Kd490avg = Kd490avg +  Kd(l)
+               END IF
+            
             ENDDO
          ENDIF
 
        !  print *,'layer_idx',layer,swr_J, h,f_att_d
         ! print *,'spectrum B4',spectrum
 
-         IF (data%save_Kd) &
-            _DIAG_VAR_(data%id_Kd(size(data%lambda_out)+1)) = SUM(Kd(1:data%nlambda))
 
          ! From top to centre of layer
          direct = direct * f_att_d
@@ -1043,16 +1027,26 @@ print *,'yearday',yearday,latitude
          ! Compute remaining downwelling shortwave flux and from that, absorption [heating]
          swr_J = sum(data%swr_weights * spectrum)
          _DIAG_VAR_(data%id_swr_abs) = swr_top - swr_J
+         IF (data%save_Kd .AND. swr_top>0.01) &
+           _DIAG_VAR_(data%id_Kd(size(data%lambda_out)+1)) = -log(swr_J/swr_top) / h
+
+         IF(l490_sf>0.01) THEN !incoming solar >0.01 W/m2
+           ! look for last layer where radiation at lambda490 is >10% of sf amount
+           atten_frac = (data%swr_weights(data%l490_l) * spectrum(data%l490_l)) / l490_sf 
+           IF (atten_frac>0.1) secchi_botlayer = layer
+         ENDIF
+
       END DO
       ! End vertical/column loop
 
       !-----------------------------------------------------------------------------------------------
       ! Put remaining shortwave in bottom layer
       !  (assumes all light is absorbed by sediment and injected into water column)
+      _DIAG_VAR_(data%id_swr_abs) = swr_J * 0.5 ! 50% refelct to water and 50% to sediment
 
-      !MH   _DIAG_VAR_(data%id_swr_abs) = swr_J
-
-      _DIAG_VAR_S_(data%id_secchi) = 0.
+      ! Finalise secchi calculation, by averaging all Kd490 within euphotic depth (>10% I0)
+      Kd490avg = Kd490avg / secchi_botlayer
+      _DIAG_VAR_S_(data%id_secchi) = 1.7 / Kd490avg
 
       !STOP
 END SUBROUTINE aed_calculate_column_oasim
