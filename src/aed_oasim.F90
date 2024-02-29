@@ -69,7 +69,7 @@ MODULE aed_oasim
    USE aed_core
    USE aed_slingo
    USE aed_maths
-!  USE curtin_light
+   USE curtin_light, ONLY : direct_diffuse_curtin
 
    IMPLICIT NONE
 
