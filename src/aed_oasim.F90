@@ -69,7 +69,7 @@ MODULE aed_oasim
    USE aed_core
    USE aed_slingo
    USE aed_maths
-   USE curtin_light
+!  USE curtin_light
 
    IMPLICIT NONE
 
@@ -665,7 +665,7 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       AED_REAL,DIMENSION(data%nlambda) :: direct, diffuse, spectrum, Kd  ! Spectra at top of the water
                                                ! column (with refraction and reflection accounted for)
       AED_REAL,DIMENSION(nlambda_5nm_astm) :: direct_5nm, diffuse_5nm ! Spectra at top of the water
-      AED_REAL :: par_J, swr_J, uv_J, par_E, F_a, omega_a
+      AED_REAL :: par_J=0., swr_J=0., uv_J=0., par_E=0., F_a, omega_a
       AED_REAL,DIMENSION(data%nlambda) :: tau_a, T_a, T_oz, T_w, T_u, T_r, T_aa, T_as
       AED_REAL,DIMENSION(data%nlambda) :: T_g, T_dclr, T_sclr, T_dcld, T_scld
       AED_REAL,DIMENSION(data%nlambda) :: rho_d, rho_s
@@ -676,7 +676,7 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       INTEGER  :: i_iop
       AED_REAL :: c_iop, h, swr_top, l490_sf, costheta_r, dir_frac
       AED_REAL :: SWFLUX, MaxSWFlux
-      AED_REAL :: c_eff, atten_frac, Kd490avg
+      AED_REAL :: c_eff, atten_frac, Kd490avg=0.
       INTEGER  :: month, secchi_botlayer
       CHARACTER(len=1):: met
 
