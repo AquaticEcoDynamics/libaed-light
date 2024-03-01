@@ -84,7 +84,8 @@ MODULE aed_oasim
       AED_REAL,DIMENSION(:),ALLOCATABLE :: a  ! specific absorption (m-1 concentration-1)
       AED_REAL,DIMENSION(:),ALLOCATABLE :: b  ! specific total scattering (m-1 concentration-1)
       AED_REAL :: b_b                         ! ratio of backscattering to total scattering (dimensionless)
-      AED_REAL :: b_p                         ! ratio of backscattering to total scattering (dimensionless)
+      AED_REAL :: b_p                         ! packaging effect parameter (dimensionless)
+      AED_REAL :: scale                       ! optional user scaling factor to amplify/dampen (dimensionless)
    END TYPE
 !
    TYPE,extends(aed_model_data_t) :: aed_oasim_data_t
@@ -204,6 +205,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
                                     !    8: CDOC
                                     !    9: OM with custom absorption/scattering
    CHARACTER(len=64) :: iop_link(MAX_PHYTO_TYPES) = ''
+   AED_REAL :: iop_scale(MAX_PHYTO_TYPES) = 1.0 !
 
    INTEGER  :: spectral_output = 0  ! spectral output :
                                     !    0: none
@@ -233,7 +235,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
 !  %% END NAMELIST   %%  /aed_oasim/
 
    NAMELIST /aed_oasim/ lambda_method, nlambda, lambda_min, lambda_max,        &
-                        n_iop, iop_type, iop_link,                             &
+                        n_iop, iop_type, iop_link, iop_scale,                  &
                         spectral_output, nlambda_out, lambda_out,              &
                         lambda, save_Kd,                                       &
                         cloud, airpres, lwp, O3, WV, visibility, air_mass_type,&
@@ -279,6 +281,9 @@ SUBROUTINE aed_define_oasim(data, namlst)
       ALLOCATE(data%iops(i_iop)%a(nlambda))
       ALLOCATE(data%iops(i_iop)%b(nlambda))
       write(strindex, '(i0)') i_iop
+
+      data%iops(i_iop)%b_p = 1.0   
+      data%iops(i_iop)%scale = iop_scale(i_iop) 
 
       SELECT CASE (iop_type(i_iop))
       CASE (1)  ! DIATOMS
@@ -396,6 +401,9 @@ SUBROUTINE aed_define_oasim(data, namlst)
       ! Protect against -ve coefficients caused by extrapolation beyond source spectrum boundaries
       data%iops(i_iop)%a(:) = max( data%iops(i_iop)%a, zero_ )
       data%iops(i_iop)%b(:) = max( data%iops(i_iop)%b, zero_ )
+
+      ! Apply any optional user "scaling" adjustments to a spectra
+      data%iops(i_iop)%a(:) = data%iops(i_iop)%a(:) * data%iops(i_iop)%scale 
 
       ! Link to concentration metric to allow us to convert *specific* absorption/scattering into
       ! actual absorption and scattering (in m-1)
@@ -833,27 +841,19 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
          ! Interpolate the retunred size (nlambda_5nm_astm (741)) to user spectrum
          CALL interp(nlambda_5nm_astm, lambda_5nm_astm, direct_5nm, data%nlambda, data%lambda, direct)
          CALL interp(nlambda_5nm_astm, lambda_5nm_astm, diffuse_5nm, data%nlambda, data%lambda, diffuse)
-         !(m,nsource,x,y,ntarget,targetx,targety)
        
          spectrum = direct + diffuse
          swr_J = sum(data%swr_weights   * spectrum)
          uv_J  = sum(data%uv_weights    * spectrum)
          par_J = sum(data%par_weights   * spectrum)
-         par_E = sum(data%par_E_weights * spectrum)
-         
-         !print *,'lambda_5nm_astm',lambda_5nm_astm
-         !print *,'diffuse_5nm',diffuse_5nm
-         !print *,'direct_5nm',direct_5nm
-
-
+         par_E = sum(data%par_E_weights * spectrum)         
       ENDIF
       
-   
       _DIAG_VAR_S_(data%id_par_E_sf) = par_E   ! Photosynthetically Active Radiation, PAR (umol/m2/s)
       _DIAG_VAR_S_(data%id_par_sf)   = par_J   ! Photosynthetically Active Radiation, PAR (W/m2)
       _DIAG_VAR_S_(data%id_swr_sf)   = swr_J   ! Total shortwave radiation (W/m2), SW [up to 4000 nm]
       _DIAG_VAR_S_(data%id_uv_sf)    = uv_J    ! Ultraviolet Radiation, UV (W/m2)
-      swr_J = sum(data%swr_weights * diffuse)  ! Repopulate variabel with diffuse only
+      swr_J = sum(data%swr_weights * diffuse)  ! Repopulate variable with diffuse only fraction 
       _DIAG_VAR_S_(data%id_swr_dif_sf) = swr_J ! Diffuse shortwave radiation (W/m2), SW [up to 4000 nm]
 
       SELECT CASE (data%spectral_output)
@@ -882,6 +882,7 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       diffuse = diffuse * (1. - rho_s)
       spectrum = direct + diffuse
 
+      ! Re-compute aggregate amounts and store to diagnostics
       par_E = sum(data%par_E_weights * spectrum)
       par_J = sum(data%par_weights * spectrum)
       swr_J = sum(data%swr_weights * spectrum)
@@ -891,10 +892,9 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       _DIAG_VAR_S_(data%id_swr_sf_w) =  swr_J  ! Total shortwave radiation (W/m2) [up to 4000 nm]
       _DIAG_VAR_S_(data%id_uv_sf_w) = uv_J     ! UV (W/m2)
 
-
       l490_sf = swr_J * data%swr_weights(data%l490_l)
       secchi_botlayer = 1
-      
+
       !-----------------------------------------------------------------------------------------------
       ! Now loop down through the water column
       DO layer = 1,SIZE(layer_map)
@@ -909,7 +909,7 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
          b_b = 0.5 * data%b_w
          DO i_iop = 1, size(data%iops)
             c_iop = _STATE_VAR_(data%iops(i_iop)%id_c)
-            a_iop = c_iop * data%iops(i_iop)%a
+            a_iop = c_iop * data%iops(i_iop)%a 
             SELECT CASE (data%spectral_output)
             CASE (1)
                DO l = 1, data%nlambda
