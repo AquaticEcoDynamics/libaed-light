@@ -1,7 +1,8 @@
 #include "aed.h"
 
-! I refer to the contents of file Direct_Diffuse_Notes.pdf whose title is: "Technical note on direct and diffuse surface spectral
-! vector irradiance above air-sea interface for Cockburn Sound"
+! I refer to the contents of file Direct_Diffuse_Notes.pdf whose title is: 
+!"Technical note on direct and diffuse surface spectral
+!   vector irradiance above air-sea interface for Cockburn Sound"
 !
 ! NOTE:  The subroutine direct_diffuse_curtin is not written in a way that can be overloaded.
 
@@ -30,7 +31,7 @@ CONTAINS
 
 
 
-SUBROUTINE direct_diffuse_curtin(SWFlux, MaxSWFlux, theta, month, met, direct, diffuse, uv, par)
+SUBROUTINE direct_diffuse_curtin(SWFlux, MaxSWFlux, theta, day_of_year, met, direct, diffuse, uv, par)
 !-----------------------------------------------------------------------------------------------
 ! INPUT:
 !   SWFlux [W/m2]
@@ -45,8 +46,8 @@ SUBROUTINE direct_diffuse_curtin(SWFlux, MaxSWFlux, theta, month, met, direct, d
 !   par [W/m2]
 !-----------------------------------------------------------------------------------
 !ARGUMENTS
-   AED_REAL,INTENT(in)  :: SWFlux, MaxSWFlux, theta
-   INTEGER,INTENT(in)          :: month
+   AED_REAL,INTENT(in)  :: SWFlux, MaxSWFlux, theta, day_of_year
+  !INTEGER,INTENT(in)          :: month
    CHARACTER(len=1),INTENT(in) :: met
    AED_REAL,INTENT(out) :: direct(nlambda_5nm_astm), diffuse(nlambda_5nm_astm), uv, par
 
@@ -66,7 +67,7 @@ SUBROUTINE direct_diffuse_curtin(SWFlux, MaxSWFlux, theta, month, met, direct, d
 
    ! MaxSWFlux < 0 means use a function built from forecast/reanalysis timeseries of SWFlux over the Cockburn Sound domain
    if (MaxSWFlux < 0) then
-      maxflux = maxswflux_statistical(theta, month, met)
+      maxflux = maxswflux_statistical(theta, day_of_year, met)
    else
       maxflux = MaxSWFlux
    end if
@@ -182,12 +183,12 @@ END FUNCTION cloud_proportion
 
 
 
-AED_REAL FUNCTION maxswflux_statistical(theta, month, met)
+AED_REAL FUNCTION maxswflux_statistical(theta, doy, met)
 !`````````````````````````````````````````````````````````!
-AED_REAL, parameter :: doy(12) = (/ 15., 45., 74., 105., 135., 166., 196., 227., 258., 288., 319., 349. /)
+!AED_REAL, parameter :: doy(12) = (/ 15., 45., 74., 105., 135., 166., 196., 227., 258., 288., 319., 349. /)
 !ARGUMENTS
-   AED_REAL,INTENT(in) :: theta            ! solar zenith angle in degrees
-   INTEGER,INTENT(in)  :: month            ! needs to be in range 1-12, not checked
+   AED_REAL,INTENT(in) :: theta, doy       ! solar zenith angle in degrees
+   !INTEGER,INTENT(in)  :: month              ! needs to be in range 1-365, not checked
    CHARACTER(len=1),INTENT(in) :: met      ! 'B' for BARRA, else 'W' for WRF is assumed
 !LOCALS
    AED_REAL              :: t, mu, f
@@ -205,7 +206,8 @@ AED_REAL, parameter :: doy(12) = (/ 15., 45., 74., 105., 135., 166., 196., 227.,
    else
      maxswflux_statistical = 0.868905 + (902.6874 + (492.08104 - 239.7974*mu)*mu)*mu  ! WRF
    end if
-   f = (1 + 0.034 * cos(2.*pi*doy(month)/365.)) / 1.03287 ! scaling factor for month of year
+   !f = (1 + 0.034 * cos(2.*pi*doy(month)/365.)) / 1.03287 ! scaling factor for month of year
+   f = (1 + 0.034 * cos(2.*pi*doy/365.)) / 1.03287 ! scaling factor for month of year
    maxswflux_statistical = f * maxswflux_statistical
    if (maxswflux_statistical < 0) maxswflux_statistical = 0
 END FUNCTION maxswflux_statistical
