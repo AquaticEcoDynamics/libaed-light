@@ -264,7 +264,7 @@ AED_REAL FUNCTION zenith_angle(days, hour, dlon, dlat)
 !LOCALS
     AED_REAL,PARAMETER :: yrdays = 365.24
     AED_REAL           :: th0, th02, th03, sundec
-    AED_REAL           :: thsun, coszen
+    AED_REAL           :: thsun, coszen, et
     AED_REAL           :: rlon, rlat
 !-------------------------------------------------------------------------------
 !BEGIN
@@ -279,16 +279,16 @@ AED_REAL FUNCTION zenith_angle(days, hour, dlon, dlat)
     sundec =  0.006918 - 0.399912*cos(th0) + 0.070257*sin(th0) &
             - 0.006758*cos(th02) + 0.000907*sin(th02)                &
             - 0.002697*cos(th03) + 0.001480*sin(th03)
+    et = (0.000075+0.001868*cos(th0)-0.032077*sin(th0)-0.014615*cos(th02)-0.040849*sin(th02))*12./pi
 
     ! sun hour angle :
-    thsun = (hour-12.)*15.*deg2rad + rlon
+    thsun = (hour+et-12.)*15.*deg2rad + rlon
 
     ! cosine of the solar zenith angle :
     coszen = sin(rlat)*sin(sundec)+cos(rlat)*cos(sundec)*cos(thsun)
 
     zenith_angle = acos(coszen)
 END FUNCTION zenith_angle
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 !###############################################################################
