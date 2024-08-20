@@ -82,7 +82,7 @@ MODULE aed_oasim
       INTEGER                   :: id_c       ! concentration (could be chl, carbon, or
                                               ! something else, but its product with
                                               ! a or b below should return units m-1)
-      INTEGER                   :: id_parc    ! par photons captured by this IOP 
+      INTEGER                   :: id_parc    ! par photons captured by this IOP
       INTEGER                   :: id_aeff    ! projected area of leaves in a benthic canopy
       AED_REAL,DIMENSION(:),ALLOCATABLE :: a  ! specific absorption (m-1 concentration-1)
       AED_REAL,DIMENSION(:),ALLOCATABLE :: b  ! specific total scattering (m-1 concentration-1)
@@ -117,7 +117,7 @@ MODULE aed_oasim
       LOGICAL :: save_Kd, ozone
       AED_REAL :: cloud, airpres, lwp, O3, WV, visibility, air_mass_type, tzshift
 
-    CONTAINS       ! Selected AED methods: 
+    CONTAINS       ! Selected AED methods:
          PROCEDURE :: define            => aed_define_oasim
          PROCEDURE :: calculate_surface => aed_calculate_surface_oasim
          PROCEDURE :: calculate_column  => aed_calculate_column_oasim
@@ -128,7 +128,7 @@ MODULE aed_oasim
 
 ! MODULE GLOBALS
    AED_REAL :: DTday       = (15./60.)/24.    ! 15 minutes
-   AED_REAL, PARAMETER :: WindAvgTime = 1.0   ! 1 day   
+   AED_REAL, PARAMETER :: WindAvgTime = 1.0   ! 1 day
    INTEGER  :: diag_level = 10                ! 0 = no diagnostic outputs
                                               ! 1 = basic diagnostic outputs
                                               ! 2 = flux rates, and supporitng
@@ -165,7 +165,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
 
    INTEGER,PARAMETER :: exter_source = 2
 
-   ! Coefficients for wavelength dependence of foam reflectance 
+   ! Coefficients for wavelength dependence of foam reflectance
    !                                       (Eqs A11, A12 in Gregg & Casey 2009)
    AED_REAL,PARAMETER :: a0 =  0.9976
    AED_REAL,PARAMETER :: a1 =  0.2194
@@ -222,7 +222,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
    AED_REAL :: air_mass_type = 10.0 ! air mass type (1=open ocean, 10=continental)
    INTEGER  :: sky_model = 1        ! sub-model approach to comput incoming spectra
    AED_REAL :: tzshift = 8.0        ! time-zone shift, required to offset UTC to local for solar zenith calculation
- 
+
 ! %% From Module Globals
 !  INTEGER  :: diag_level = 10      ! 0 = no diagnostic outputs
 !                                   ! 1 = basic diagnostic outputs
@@ -248,7 +248,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
    read(namlst,nml=aed_oasim,iostat=status)
    IF (status /= 0) STOP 'Error reading namelist aed_oasim'
 
-   data%O3 = O3 
+   data%O3 = O3
    data%WV = WV
    data%lwp = lwp
    data%ozone = ozone
@@ -285,9 +285,9 @@ SUBROUTINE aed_define_oasim(data, namlst)
       ALLOCATE(data%iops(i_iop)%b(nlambda))
       write(strindex, '(i0)') i_iop
 
-      data%iops(i_iop)%b_p = 1.0   
-      data%iops(i_iop)%type = iop_type(i_iop)   
-      data%iops(i_iop)%scale = iop_scale(i_iop) 
+      data%iops(i_iop)%b_p = 1.0
+      data%iops(i_iop)%type = iop_type(i_iop)
+      data%iops(i_iop)%scale = iop_scale(i_iop)
 
       SELECT CASE (iop_type(i_iop))
       CASE (1)  ! DIATOMS
@@ -305,7 +305,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
          CALL interp(size(lambda_cyanobacteria), lambda_cyanobacteria, b_cyanobacteria, nlambda, data%lambda, data%iops(i_iop)%b)
          data%iops(i_iop)%b_b = 0.0032 ! Gregg & Rousseau 2016 but originally Ahn et al. 1992
          data%iops(i_iop)%b_p = 1.0
-      CASE (4)  ! COCCOLITHOPHORIDS 
+      CASE (4)  ! COCCOLITHOPHORIDS
          CALL interp(size(lambda_coccolithophores), lambda_coccolithophores, a_coccolithophores, &
                                                                              nlambda, data%lambda, data%iops(i_iop)%a)
          CALL interp(size(lambda_coccolithophores), lambda_coccolithophores, b_coccolithophores, &
@@ -321,7 +321,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
          data%iops(i_iop)%b_p = 1.0
       CASE (6)  ! DETRITUS (small, as described in Gregg & Rousseau 2016)
          ! Parameters below match the small organic detritus parametrization of Gallegos et al. 2011 (Table 2)
-         !  - the latter also offers a parametrizaton for large detritus. Note: Gallegos et al. 2011 constants 
+         !  - the latter also offers a parametrizaton for large detritus. Note: Gallegos et al. 2011 constants
          !    are specific to dry weight! Did Gregg & Rousseau 2016 misinterpret them as specific to carbon weight?
          !    If so: Babin et al 2003 state 2.6 g DW per g C is representative for suspended OM, Bruggeman pers com
          !    notes adding factor 2.6 (DW/C) seems like to make L4/WCO match much better
@@ -336,12 +336,12 @@ SUBROUTINE aed_define_oasim(data, namlst)
         !data%iops(i_iop)%b_b = 0.01
         !data%iops(i_iop)%b_p = 1.0
       CASE (8) !  CDOC
-         ! Note that 12.0107 converts from mg-1 to mmol-1  
+         ! Note that 12.0107 converts from mg-1 to mmol-1
          data%iops(i_iop)%a(:) = 2.98e-4 * exp(-0.014 * (data%lambda - 443)) * 12.0107
          data%iops(i_iop)%b(:) = 0
          data%iops(i_iop)%b_b = 0
-         data%iops(i_iop)%b_p = 1.0 
-      CASE (9) ! HE6CHL (gordon-morel) 
+         data%iops(i_iop)%b_p = 1.0
+      CASE (9) ! HE6CHL (gordon-morel)
          CALL interp(size(lambda_he6chl ), lambda_he6chl, a_he6chl, nlambda, data%lambda, data%iops(i_iop)%a)
          CALL interp(size(lambda_he6chl ), lambda_he6chl, b_he6chl, nlambda, data%lambda, data%iops(i_iop)%b)
          data%iops(i_iop)%b_b = 0.02
@@ -411,7 +411,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
       data%iops(i_iop)%b(:) = max( data%iops(i_iop)%b, zero_ )
 
       ! Apply any optional user "scaling" adjustments to a spectra
-      data%iops(i_iop)%a(:) = data%iops(i_iop)%a(:) * data%iops(i_iop)%scale 
+      data%iops(i_iop)%a(:) = data%iops(i_iop)%a(:) * data%iops(i_iop)%scale
 
       ! Link to concentration metric to allow us to convert *specific* absorption/scattering into
       ! actual absorption and scattering (in m-1)
@@ -440,7 +440,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
    CALL calculate_integral_weights(300.,  400., nlambda, data%lambda, data%uv_weights )
    data%par_E_weights(:) = data%par_weights * data%lambda /(Planck*lightspeed)/Avogadro*1e-3
                            ! divide by 1e9 to go from nm to m, multiply by 1e6 to go from mol to umol
-   
+
    !-----------------------------------------------
    ! Find and link to environmental variables, from host
    data%id_yearday    = aed_locate_global('yearday')
@@ -450,7 +450,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
    data%id_I_0        = aed_locate_sheet_global('par_sf')
    data%id_relhum     = aed_locate_sheet_global('humidity')
    data%id_wind_speed = aed_locate_sheet_global('wind_speed')
- 
+
    !-----------------------------------------------
    ! Allocate necesary diagnostics
    IF( diag_level>9 ) THEN
@@ -607,10 +607,10 @@ SUBROUTINE aed_define_oasim(data, namlst)
    ENDIF
 
    !-----------------------------------------------
-   ! Add option for secchi depth output 
+   ! Add option for secchi depth output
    IF (save_Kd .AND. spectral_output>0) THEN
      data%id_secchi =     aed_define_sheet_diag_variable('secchi', 'm', 'Secchi depth (1.7/Kd490)')
-   
+
      ! Find lambda index for 490nm (e.g. for secchi)
      data%l490_l = nlambda - 1
      DO l = 1, nlambda - 1
@@ -646,7 +646,7 @@ SUBROUTINE aed_calculate_surface_oasim(data,column,layer_idx)
 !-------------------------------------------------------------------------------
 !BEGIN
 
-! ASPECTS OF ATMOSPHERE MODEL BELOW CAN BE CONSIDERED TO COME HERE    
+! ASPECTS OF ATMOSPHERE MODEL BELOW CAN BE CONSIDERED TO COME HERE
 
 END SUBROUTINE aed_calculate_surface_oasim
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -695,7 +695,7 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
    INTEGER  :: i_iop
    AED_REAL :: c_iop, h, swr_top, l490_sf, costheta_r, dir_frac
    AED_REAL :: SWFLUX, MaxSWFlux
-   AED_REAL :: c_eff, atten_frac, Kd490avg=0., a_eff 
+   AED_REAL :: c_eff, atten_frac, Kd490avg=0., a_eff
    INTEGER  :: month, secchi_botlayer
    CHARACTER(len=1):: met
 
@@ -710,11 +710,11 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
    ! Set column time/location properties
    longitude   = _STATE_VAR_S_(data%id_lon)
    latitude    = _STATE_VAR_S_(data%id_lat)
-   yearday     = _STATE_VAR_S_(data%id_yearday) 
+   yearday     = _STATE_VAR_S_(data%id_yearday)
    yearday_utc = yearday - data%tzshift/24.
    days        = floor(yearday_utc)
    hour        = mod(yearday_utc, 1.0) * 24.0
-   
+
    ! Calculate zenith angle (in radians)
    theta = zenith_angle(days, hour, longitude, latitude)
    theta = min(theta, 0.5*pi)      ! Restrict the input zenith angle between 0 & pi/2
@@ -731,19 +731,19 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       _DIAG_VAR_S_(data%id_doy) = yearday
       ! Special diagnostics for tracking time of day solar peak occurs
       IF( mod(yearday, 1.0) * 24.0 < 1. ) THEN
-         _DIAG_VAR_S_(data%id_hr_peakz) =  90.   
+         _DIAG_VAR_S_(data%id_hr_peakz) =  90.
          _DIAG_VAR_S_(data%id_hr_peakx) =  0.
       ENDIF
-      IF( _DIAG_VAR_S_(data%id_zen) < _DIAG_VAR_S_(data%id_hr_peakz) ) & 
-        _DIAG_VAR_S_(data%id_hr_peakz) = _DIAG_VAR_S_(data%id_zen) !mod(yearday, 1.0) * 24.0 
-      IF( SWFLUX > _DIAG_VAR_S_(data%id_hr_peakx) ) & 
+      IF( _DIAG_VAR_S_(data%id_zen) < _DIAG_VAR_S_(data%id_hr_peakz) ) &
+        _DIAG_VAR_S_(data%id_hr_peakz) = _DIAG_VAR_S_(data%id_zen) !mod(yearday, 1.0) * 24.0
+      IF( SWFLUX > _DIAG_VAR_S_(data%id_hr_peakx) ) &
         _DIAG_VAR_S_(data%id_hr_peakx) = _DIAG_VAR_S_(data%id_hr_peakx) !mod(yearday, 1.0) * 24.0
    ENDIF
 
    !-------------------------------------------------------------------------------
    ! Compute incoming spectral irradiance based on atmospheric properties
-   IF(data%sky_model == 1) THEN 
- 
+   IF(data%sky_model == 1) THEN
+
        ! Set column environmental conditions (from parameters)
        AM          = data%air_mass_type !_STATE_VAR_S_(data%id_air_mass_type)
                                         ! Aerosol air mass type (1: open ocean, 10: continental)
@@ -857,13 +857,13 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
    uv_J  = sum(data%uv_weights    * spectrum)
    par_J = sum(data%par_weights   * spectrum)
    par_E = sum(data%par_E_weights * spectrum)
-   
+
    ! Set diagnostics of surface irradiance (bulk)
    _DIAG_VAR_S_(data%id_par_E_sf) = par_E    ! Photosynthetically Active Radiation, PAR (umol/m2/s)
    _DIAG_VAR_S_(data%id_par_sf)   = par_J    ! Photosynthetically Active Radiation, PAR (W/m2)
    _DIAG_VAR_S_(data%id_swr_sf)   = swr_J    ! Total shortwave radiation (W/m2), SW [up to 4000 nm]
    _DIAG_VAR_S_(data%id_uv_sf)    = uv_J     ! Ultraviolet Radiation, UV (W/m2)
-   swr_J = sum(data%swr_weights * diffuse)   ! Repopulate variable with diffuse only fraction 
+   swr_J = sum(data%swr_weights * diffuse)   ! Repopulate variable with diffuse only fraction
    _DIAG_VAR_S_(data%id_swr_dif_sf) = swr_J  ! Diffuse shortwave radiation (W/m2), SW [up to 4000 nm]
 
    ! Set diagnostics of surface irradiance (spectral)
@@ -904,17 +904,17 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
    _DIAG_VAR_S_(data%id_uv_sf_w) = uv_J            ! UV (W/m2)
 
    l490_sf = swr_J * data%swr_weights(data%l490_l) ! Incoming irradiance @ 490nm
-   secchi_botlayer = 1                             ! Used to set secchi depth 
+   secchi_botlayer = 1                             ! Used to set secchi depth
    a_mac = zero_                                   ! Initialise macrophyte/seagrass absorbance
 
    !-------------------------------------------------------------------------------
    ! Now loop down through the water column
    DO layer = 1,SIZE(layer_map)
-      
+
       layer_idx = layer_map(layer)
-         
+
       ! Save downwelling shortwave flux at top of the layer
-      swr_top = swr_J   
+      swr_top = swr_J
 
       ! Compute absorption, total scattering and backscattering in current layer from IOPs
       a = data%a_w ; b = data%b_w
@@ -922,7 +922,7 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       DO i_iop = 1, size(data%iops)
          IF (data%iops(i_iop)%type<20) THEN
             c_iop = _STATE_VAR_(data%iops(i_iop)%id_c)
-            a_iop = c_iop * data%iops(i_iop)%a 
+            a_iop = c_iop * data%iops(i_iop)%a
             SELECT CASE (data%spectral_output)
             CASE (1)
                DO l = 1, data%nlambda
@@ -943,11 +943,11 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
                c_iop = _STATE_VAR_S_(data%iops(i_iop)%id_c)    ! MAC_A
                a_eff = _STATE_VAR_S_(data%iops(i_iop)%id_aeff) ! A_eff * sine_blade
                a_mac = c_iop * data%iops(i_iop)%a * a_eff      ! a * A_eff * sine_blade * MAC
-            ENDIF            
+            ENDIF
          ENDIF
       ENDDO
 
-      ! Transmissivity of direct/diffuse attentuation and conversion from direct to diffuse 
+      ! Transmissivity of direct/diffuse attentuation and conversion from direct to diffuse
       ! - for one half of the layer
       h = _STATE_VAR_(data%id_h)
       f_att_d = exp(-0.5 * (a + b) * h / costheta_r)         ! Gregg & Rousseau 2016 Eq 8
@@ -959,22 +959,22 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
          DO l = 1, data%nlambda
               !Kd(l) = 2 * (log(direct(l) + diffuse(l)) - log(direct(l) * (f_att_d(l) + f_prod_s(l)) + diffuse(l) * f_att_s(l))) / h
                IF (direct(l) + diffuse(l) > 0) THEN
-                  ! Direct and diffuse stream 
+                  ! Direct and diffuse stream
                   dir_frac = direct(l) / (direct(l) + diffuse(l))
                   Kd(l) = - 2 *log(dir_frac * (f_att_d(l) + f_prod_s(l)) + (1.0 - dir_frac) * f_att_s(l)) / h
                ELSE
                   ! Only diffuse stream
                   Kd(l) = (a(l) + r_s * b_b(l)) / mcosthetas
                ENDIF
-               IF(l==data%l490_l) THEN 
+               IF(l==data%l490_l) THEN
                   ! increment Kd490 with this layers properties
                   Kd490avg = Kd490avg +  Kd(l)
                END IF
-            
+
          ENDDO
       ENDIF
 
-      ! From top to centre of layer 
+      ! From top to centre of layer
       direct = direct * f_att_d
       diffuse = diffuse * f_att_s + direct * f_prod_s
       spectrum = direct + diffuse
@@ -989,9 +989,9 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       _DIAG_VAR_(data%id_uv) = uv_J     ! UV (W/m2)
       _DIAG_VAR_(data%id_par_E_dif) = & ! Diffuse Photosynthetically Active photon flux (umol/m2/s)
                                       sum(data%par_E_weights * diffuse)
-                                          
 
-      ! Compute scalar PAR as experienced by phytoplankton 
+
+      ! Compute scalar PAR as experienced by phytoplankton
       spectrum = direct / costheta_r + diffuse / mcosthetas
       par_J = sum(data%par_weights * spectrum)
       par_E = sum(data%par_E_weights * spectrum)
@@ -1011,7 +1011,7 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
          _STATE_VAR_S_(data%iops(i_iop)%id_parc) = par_M ! Return PAR capture rate to linked group
       ENDIF
 
-      ! From centre to bottom of layer - for 2nd half of the layer 
+      ! From centre to bottom of layer - for 2nd half of the layer
       direct = direct * f_att_d
       diffuse = diffuse * f_att_s + direct * f_prod_s
       spectrum = direct + diffuse
@@ -1028,11 +1028,11 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
          CASE (2)
             CALL interp(data%nlambda, data%lambda, direct, size(data%lambda_out), data%lambda_out, spectrum_out)
             DO l = 1, size(data%lambda_out)
-               _DIAG_VAR_(data%id_band_dir(l)) = spectrum_out(l) 
+               _DIAG_VAR_(data%id_band_dir(l)) = spectrum_out(l)
             ENDDO
             CALL interp(data%nlambda, data%lambda, diffuse, size(data%lambda_out), data%lambda_out, spectrum_out)
             DO l = 1, size(data%lambda_out)
-               _DIAG_VAR_(data%id_band_dif(l)) = spectrum_out(l) 
+               _DIAG_VAR_(data%id_band_dif(l)) = spectrum_out(l)
             ENDDO
             CALL interp(data%nlambda, data%lambda, a, size(data%lambda_out), data%lambda_out, spectrum_out)
             DO l = 1, size(data%lambda_out)
@@ -1058,13 +1058,13 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
 
       IF(l490_sf>0.01) THEN !incoming solar >0.01 W/m2
            ! look for last layer where radiation at lambda490 is 10% of sf amount
-           atten_frac = (data%swr_weights(data%l490_l) * spectrum(data%l490_l)) / l490_sf 
+           atten_frac = (data%swr_weights(data%l490_l) * spectrum(data%l490_l)) / l490_sf
            IF (atten_frac>0.1) secchi_botlayer = layer
       ENDIF
 
    END DO ! End vertical/column loop
-   
-  
+
+
    !-------------------------------------------------------------------------------
    ! Put remaining shortwave in bottom layer
    !  (assumes all light is absorbed by sediment and injected into water column)
@@ -1102,7 +1102,7 @@ SUBROUTINE aed_calculate_dry_oasim(data,column,layer_idx)
                                                ! (Sathyendranath and Platt 1989, p 191) NB Ackleson et al 1994 use 0.9
       AED_REAL,PARAMETER :: r_s = 1.5          ! Shape factor representing mean backscatter coefficient
                                                ! of diffuse irradiance (r_d in Ackleson et al. 1994 p 7487)
-   
+
       AED_REAL :: longitude, latitude, yearday, cloud_cover, wind_speed, &
                   airpres, relhum, LWP, water_vapour, WV, WM, visibility, AM
       AED_REAL :: days, hour, theta, costheta, alpha_a, beta_a, yearday_utc
@@ -1116,18 +1116,18 @@ SUBROUTINE aed_calculate_dry_oasim(data,column,layer_idx)
       AED_REAL,DIMENSION(data%nlambda) :: tau_a, T_a, T_oz, T_w, T_u, T_r, T_aa, T_as
       AED_REAL,DIMENSION(data%nlambda) :: T_g, T_dclr, T_sclr, T_dcld, T_scld
       AED_REAL,DIMENSION(data%nlambda) :: rho_d, rho_s
-   
+
       AED_REAL,DIMENSION(data%nlambda) :: a, b, b_b, a_iop, a_mac
       AED_REAL,DIMENSION(data%nlambda) :: f_att_d, f_att_s, f_prod_s, f_att_m
       AED_REAL, allocatable :: spectrum_out(:)
       INTEGER  :: i_iop
       AED_REAL :: c_iop, h, swr_top, l490_sf, costheta_r, dir_frac
       AED_REAL :: SWFLUX, MaxSWFlux
-      AED_REAL :: c_eff, atten_frac, Kd490avg=0., a_eff 
+      AED_REAL :: c_eff, atten_frac, Kd490avg=0., a_eff
       INTEGER  :: month, secchi_botlayer
       CHARACTER(len=1):: met
-   
-   
+
+
    !-------------------------------------------------------------------------------
    !BEGIN
       !IF (data%spectral_output == 2) ALLOCATE(spectrum_out(size(data%lambda_out)))
@@ -1136,34 +1136,34 @@ SUBROUTINE aed_calculate_dry_oasim(data,column,layer_idx)
       ! Set column time/location properties
       longitude   = _STATE_VAR_S_(data%id_lon)
       latitude    = _STATE_VAR_S_(data%id_lat)
-      yearday     = _STATE_VAR_S_(data%id_yearday) 
+      yearday     = _STATE_VAR_S_(data%id_yearday)
       yearday_utc = yearday - 8./24.
       days        = floor(yearday_utc)
       hour        = mod(yearday_utc, 1.0) * 24.0
-      
+
      ! Calculate zenith angle (in radians)
       theta = zenith_angle(days, hour, longitude, latitude)
       theta = min(theta, 0.5 * pi)  ! Restrict the input zenith angle between 0 and pi/2
       costheta = cos(theta)
-   
+
       ! Set column environmental conditions (from host)
       WM          = _STATE_VAR_S_(data%id_mean_wind_speed) ! Daily mean wind speed @ 10 m above surface (m/s)
       wind_speed  = _STATE_VAR_S_(data%id_wind_speed)      ! Wind speed @ 10 m above surface (m/s)
       relhum      = _STATE_VAR_S_(data%id_relhum)          ! Relative humidity (-)
       SWFLUX      = _STATE_VAR_S_(data%id_I_0)             ! Incoming shortwave flux
-   
+
       IF( diag_level>9 ) THEN
          _DIAG_VAR_S_(data%id_swflux) = SWFLUX
          _DIAG_VAR_S_(data%id_zen) = rad2deg * theta
          _DIAG_VAR_S_(data%id_doy) = yearday
       ENDIF
-   
+
 
       RETURN
       !-------------------------------------------------------------------------------
       ! Compute incoming spectral irradiance based on atmospheric properties
-      IF(data%sky_model == 1) THEN 
-    
+      IF(data%sky_model == 1) THEN
+
           ! Set column environmental conditions (from parameters)
           AM          = data%air_mass_type !_STATE_VAR_S_(data%id_air_mass_type)
                                            ! Aerosol air mass type (1: open ocean, 10: continental)
@@ -1177,93 +1177,93 @@ SUBROUTINE aed_calculate_dry_oasim(data,column,layer_idx)
             O3 = vH_O3(longitude, latitude, yearday)
             _DIAG_VAR_S_(data%id_O3) = O3
           ENDIF
-   
+
           ! Adjustments and diagnostic outputs for debugging
           _DIAG_VAR_S_(data%id_wind_out) = wind_speed
           IF (data%id_mean_wind_out > 0) _DIAG_VAR_S_(data%id_mean_wind_out) = WM
           IF (cloud_cover > 0) LWP = LWP / cloud_cover
-   
+
           ! LWP is the mean density over a grid box (Jorn: ECMWF pers comm 26/2/2019), but
           !        we want the mean density per cloud-covered area
           WV   = water_vapour / 10             ! from kg m-2 to cm
           O3   = O3 * (1000 / 48.) / 0.4462    ! from kg m-2 to mol m-2, then from mol m-2 to atm cm (Basher 1982)
-   
+
           ! Atmospheric path length, a.k.a. relative air mass (Eq 3 Bird 1984, Eq 5 Bird & Riordan 1986, &
           !                                        Eq 13 Gregg & Carder 1990, Eq A5 in Casey & Gregg 2009)
           ! Note this should always exceed 1, but as it is an approximation it does not near &
           !                                    theta -> 0 (Tomasi et al. 1998 p14). Hence the max operator.
           M = max(1., 1. / (costheta + 0.15 * (93.885 - theta * rad2deg)**(-1.253)))
-   
+
           ! Pressure-corrected atmospheric path length (Eq A6 Casey & Gregg 2009)
           M_prime = M * airpres / pres0
-   
+
           ! Atmospheric path length for ozone
           !  Eq 10, Bird & Riordan 1986, Eq 14 Gregg & Carder 1990; NB 6370 is the earth's radius in km
           !  See also Tomasi et al. 1998 Eq 5
           M_oz = (1. + H_oz / 6370.) / sqrt(costheta**2 + 2 * H_oz / 6370.)
-   
+
           ! Transmittance due to ozone absorption (Eq 8 Bird 1984, Eq 9 Bird & Riordan 1986, Eq 17 Gregg & Carder 1990)
           T_oz = exp(-data%a_o * O3 * M_oz)
-   
+
           ! Transmittance due to water vapour absorption - should NOT use pressure-corrected airmass (see Bird and Riordan 1986)
           !  Eq 8, Bird and Riordan 1986 (Eq 7 Bird 1984 is wrong, as mentioning in B&R, p 89), Eq 19 Gregg & Carder 1990
           T_w = exp((-0.2385 * data%a_v * WV * M) / (1. + 20.07 * data%a_v * WV * M)**0.45)
-   
+
           ! Transmittance due to uniformly mixed gas absorption - SHOULD use pressure corrected airmass
           !  Eq 10 Bird 1984, Eq 11 Bird and Riordan 1986, Eq 18 Gregg & Carder 1990
           !  Bird & Riordan use 118.93 rather than 118.3, but state 118.3 should be used in the future.
           T_u = exp(-1.41 * data%a_u * M_prime / (1. + 118.3 * data%a_u * M_prime)**0.45)
-   
+
           ! Transmittance terms that apply for both cloudy and clear skies.
           T_g = T_oz * T_w * T_u
-   
+
           ! -------------------
           ! Clear skies part
           ! -------------------
-   
+
           ! Transmittance due to Rayleigh scattering (use precomputed optical thickness)
           T_r = exp(-M_prime * data%tau_r)
-   
+
           ! Transmittance due to aerosol absorption (Eq 26 Gregg & Carder 1990)
           CALL navy_aerosol_model(AM, WM, wind_speed, relhum, visibility, costheta, alpha_a, beta_a, F_a, omega_a)
           tau_a = beta_a * data%lambda**(-alpha_a)
           T_a = exp(-tau_a * M)
-   
+
           ! Direct transmittance
           T_dclr = T_r * T_a
-   
+
           ! Separate absorption and scattering components of aerosol transmittance
           T_aa = exp(-(1. - omega_a) * tau_a * M)
           T_as = exp(-omega_a * tau_a * M)
           T_sclr = T_aa * 0.5 * (1. - T_r**0.95) + T_r**1.5 * T_aa * F_a * (1 - T_as)
-   
+
           _DIAG_VAR_S_(data%id_omega_a) = omega_a
           _DIAG_VAR_S_(data%id_alpha_a) = alpha_a
           _DIAG_VAR_S_(data%id_beta_a) = beta_a
           _DIAG_VAR_S_(data%id_F_a) = F_a
-   
+
           ! -------------------
           ! Cloudy skies part
           ! -------------------
-   
+
           ! Transmittance due to absorption and scattering by clouds
           CALL slingo(costheta, max(0., LWP) * 1000, r_e, data%nlambda, data%lambda, T_dcld, T_scld)
-   
+
           ! Diffuse and direct irradiance streams (Eqs 1, 2 Gregg & Casey 2009)
           !  These combine terms for clear and cloudy skies, weighted by cloud cover fraction
           direct  = data%exter * costheta * T_g * ((1. - cloud_cover) * T_dclr + cloud_cover * T_dcld)
           diffuse = data%exter * costheta * T_g * ((1. - cloud_cover) * T_sclr + cloud_cover * T_scld)
-   
+
       ELSEIF(data%sky_model == 2) THEN
-   
+
           ! Diffuse and direct irradiance streams from local analysis of Cockburn Sound radiation (Perth, WA)
           !  These functions combine terms for clear and cloudy skies
            met = 'W'
-   
+
           ! Get function to return direct and diffuse spectra, based on incoming solar (etc)
           CALL direct_diffuse_bands(SWFlux, theta, yearday, met, data%nlambda, data%lambda_bounds, direct, diffuse)
       ENDIF
-   
+
       ! Integrate to get total incoming surface irradiance and bandwidth components
       spectrum = direct + diffuse
       swr_J = sum(data%swr_weights   * spectrum)
@@ -1276,20 +1276,20 @@ SUBROUTINE aed_calculate_dry_oasim(data,column,layer_idx)
       _DIAG_VAR_S_(data%id_par_sf)   = par_J    ! Photosynthetically Active Radiation, PAR (W/m2)
       _DIAG_VAR_S_(data%id_swr_sf)   = swr_J    ! Total shortwave radiation (W/m2), SW [up to 4000 nm]
       _DIAG_VAR_S_(data%id_uv_sf)    = uv_J     ! Ultraviolet Radiation, UV (W/m2)
-      swr_J = sum(data%swr_weights * diffuse)   ! Repopulate variable with diffuse only fraction 
+      swr_J = sum(data%swr_weights * diffuse)   ! Repopulate variable with diffuse only fraction
       _DIAG_VAR_S_(data%id_swr_dif_sf) = swr_J  ! Diffuse shortwave radiation (W/m2), SW [up to 4000 nm]
-  
+
 
 
       _DIAG_VAR_S_(data%id_par_E_sf_w) = 0.        ! Photosynthetically Active Radiation (umol/m2/s)
       _DIAG_VAR_S_(data%id_par_sf_w) = 0.          ! Photosynthetically Active Radiation (W/m2)
       _DIAG_VAR_S_(data%id_swr_sf_w) = 0.          ! Total shortwave radiation (W/m2) [up to 4000nm]
       _DIAG_VAR_S_(data%id_uv_sf_w) = 0.           ! UV (W/m2)
-   
+
 END SUBROUTINE aed_calculate_dry_oasim
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-   
-   
+
+
 
 !###############################################################################
 SUBROUTINE reflectance(nlambda, F, theta, W, rho_d, rho_s, costheta_r)
