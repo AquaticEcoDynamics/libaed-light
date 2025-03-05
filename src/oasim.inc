@@ -2320,3 +2320,7 @@ AED_REAL, parameter :: lambda_Yellowclay(19) = (/ &
       2.500000e+02, 3.250000e+02, 3.500000e+02, 3.750000e+02, 4.000000e+02, 4.250000e+02, 4.500000e+02, 4.750000e+02, 5.000000e+02, 5.250000e+02, &
       5.500000e+02, 5.750000e+02, 6.000000e+02, 6.250000e+02, 6.500000e+02, 6.750000e+02, 7.000000e+02, 7.250000e+02, 7.500000e+02 &
    /)
+
+! leaf light absorbance at selected wavelengths; from Baird et al (2016)
+AED_REAL, parameter ::       a_seagrassleaf(8) = (/ 0.72, 0.72, 0.68, 0.38, 0.38, 0.60, 0.04, 0.0 /) 
+AED_REAL, parameter :: lambda_seagrassleaf(8) = (/ 300., 390., 500., 530., 640., 680., 705., 800. /) 

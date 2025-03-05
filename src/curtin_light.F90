@@ -198,7 +198,7 @@ SUBROUTINE direct_diffuse_curtin(SWFlux, MaxSWFlux, theta, day_of_year, met, dir
 
    ! Add 1um-4um tail to clear-sky direct
    es = max(1e-37, es_5nm_astm)              ! to prevent a log(0)
-   taug = log(et_5nm_astm/es)                ! above 700nm, taug is effectively a gaseous (absorption) optical depth
+   taug =cos(37.*deg2rad)*log(et_5nm_astm/es)! above 700nm, taug is effectively a gaseous (absorption) optical depth
    se2 = mu * et_5nm_astm * exp(-taug/mu)    ! taug and a slant path can give a good estimate of direct irradiance
    ratio = se(140) / se2(140)                ! a-priori knowledge, index 140 is 997.5nm
    se2 = max(0.0, se2 * ratio)               ! ratio should be close to 1, i.e. a small adjustment to 1um-4um tail
@@ -335,12 +335,15 @@ AED_REAL FUNCTION maxswflux_statistical(theta, doy, met)
    end if
    mu = cos(t*deg2rad)
    if (met=='B') then
-     maxswflux_statistical = 44.0329 + (493.04213 + (1226.9471 - 632.4993*mu)*mu)*mu  ! BARRA
+    !maxswflux_statistical = 44.0329 + (493.04213 + (1226.9471 - 632.4993*mu)*mu)*mu  ! BARRA
+     maxswflux_statistical = 42.81 + (487.54 + (1240.40 - 676.85*mu)*mu)*mu  ! BARRA
    else
-     maxswflux_statistical = 0.868905 + (902.6874 + (492.08104 - 239.7974*mu)*mu)*mu  ! WRF
+    !maxswflux_statistical = 0.868905 + (902.6874 + (492.08104 - 239.7974*mu)*mu)*mu  ! WRF
+     maxswflux_statistical = 3.145 + (873.26 + (571.63 - 329.36*mu)*mu)*mu   ! WRF
    end if
    !f = (1 + 0.034 * cos(2.*pi*doy(month)/365.)) / 1.03287 ! scaling factor for month of year
-   f = (1 + 0.034 * cos(2.*pi*doy/365.)) / 1.03287 ! scaling factor for month of year
+   !f = (1 + 0.034 * cos(2.*pi*doy/365.)) / 1.03287 ! scaling factor for month of year
+   f = 1 + 0.034 * cos(2.*pi*doy/365.)   ! scaling factor for day of year
    maxswflux_statistical = f * maxswflux_statistical
    if (maxswflux_statistical < 0) maxswflux_statistical = 0
 END FUNCTION maxswflux_statistical

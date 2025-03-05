@@ -372,8 +372,8 @@ SUBROUTINE aed_define_oasim(data, namlst)
          data%iops(i_iop)%b_b = 0.01
          data%iops(i_iop)%b_p = 1.0
       CASE (20) ! SEAGRASS CANOPY
-         CALL interp(size(lambda_Yellowclay ), lambda_Yellowclay, a_Yellowclay, nlambda, data%lambda, data%iops(i_iop)%a)
-         CALL interp(size(lambda_Yellowclay ), lambda_Yellowclay, b_Yellowclay, nlambda, data%lambda, data%iops(i_iop)%b)
+         CALL interp(size(lambda_seagrassleaf) , lambda_seagrassleaf, a_seagrassleaf, nlambda, data%lambda, data%iops(i_iop)%a)
+         data%iops(i_iop)%b(:) = 0.0
          data%iops(i_iop)%b_b = 0.01
          data%iops(i_iop)%b_p = 1.0
       CASE (99)  ! CUSTOM (carbon-specific absorption and total scattering spectra)
@@ -387,7 +387,7 @@ SUBROUTINE aed_define_oasim(data, namlst)
          !                 'exponent of absorption spectrum for IOP '//trim(strindex), minimum=0.)
             data%iops(i_iop)%a(:) = a_star_iop * exp(-S_iop * (data%lambda - lambda_ref_iop)) * 12.0107
          ELSE
-            data%iops(i_iop)%a(:) = 0
+            data%iops(i_iop)%a(:) = 0.
          ENDIF
          !  get_parameter(b_star_iop, 'b_star_iop'//trim(strindex), 'm2/mg C', &
          !                'carbon-mass-specific scattering coefficient for IOP '//trim(strindex)//' at reference wavelength', minimum=0., default=0.)
@@ -400,8 +400,8 @@ SUBROUTINE aed_define_oasim(data, namlst)
          !                  'backscattering-to-total-scattering ratio for IOP '//trim(strindex), minimum=0.)
             data%iops(i_iop)%b(:) = b_star_iop * (lambda_ref_iop / data%lambda)**eta_iop * 12.0107
          ELSE
-            data%iops(i_iop)%b(:) = 0
-            data%iops(i_iop)%b_b = 0
+            data%iops(i_iop)%b(:) = 0.
+            data%iops(i_iop)%b_b = 0.
          ENDIF
          data%iops(i_iop)%b_p = 1.0
       END SELECT
@@ -940,9 +940,11 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
             b_b = b_b + c_eff * data%iops(i_iop)%b_b * data%iops(i_iop)%b
          ELSEIF (data%iops(i_iop)%type==20) THEN
             IF(layer==SIZE(layer_map)) THEN
-               c_iop = _STATE_VAR_S_(data%iops(i_iop)%id_c)    ! MAC_A
-               a_eff = _STATE_VAR_S_(data%iops(i_iop)%id_aeff) ! A_eff * sine_blade
-               a_mac = c_iop * data%iops(i_iop)%a * a_eff      ! a * A_eff * sine_blade * MAC
+               c_iop = _DIAG_VAR_S_(data%iops(i_iop)%id_c)    ! MAC_A
+               a_eff = _DIAG_VAR_S_(data%iops(i_iop)%id_aeff) ! A_eff * sine_blade
+               a_mac = data%iops(i_iop)%a * a_eff * c_iop      ! a * A_eff * sine_blade * MAC
+            ELSE 
+               c_iop = zero_ ; a_eff = zero_ ; a_mac = zero_
             ENDIF            
          ENDIF
       ENDDO
@@ -975,8 +977,10 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       ENDIF
 
       ! From top to centre of layer 
+      diffuse = diffuse * f_att_s + direct * f_prod_s  ! MH Reversed order of calc
       direct = direct * f_att_d
-      diffuse = diffuse * f_att_s + direct * f_prod_s
+     !direct = direct * f_att_d
+     !diffuse = diffuse * f_att_s + direct * f_prod_s
       spectrum = direct + diffuse
 
       par_E = sum(data%par_E_weights * spectrum)
@@ -1000,7 +1004,7 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
 
       ! From centre to bottom of layer - special case for macrophytes in bottom layer
       IF( layer==SIZE(layer_map) .AND. SUM(a_mac) > zero_ ) THEN
-         spectrum = direct + diffuse                     ! Spectrum at centre fo layer (assume top of canopy)
+         spectrum = direct + diffuse                     ! Spectrum at centre of layer (assumed top of canopy)
          par_J = sum(data%par_weights * spectrum)        ! Incoming PAR @ top of canopy
          f_att_m = exp( a_mac )                          ! Absorbance of light by leaf/blade area
          direct = direct * f_att_m                       ! Reduction of direct
@@ -1008,12 +1012,14 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
          spectrum = direct + diffuse                     ! Update spectrum after goinf through canopy
          par_M = sum(data%par_weights * spectrum)        ! PAR after blade photon capture
          par_M = par_J - par_M                           ! PAR capture by blades
-         _STATE_VAR_S_(data%iops(i_iop)%id_parc) = par_M ! Return PAR capture rate to linked group
+         _DIAG_VAR_S_(data%iops(i_iop)%id_parc) = par_M ! Return PAR capture rate to linked group
       ENDIF
 
       ! From centre to bottom of layer - for 2nd half of the layer 
+      diffuse = diffuse * f_att_s + direct * f_prod_s  ! MH Reversed order of calc
       direct = direct * f_att_d
-      diffuse = diffuse * f_att_s + direct * f_prod_s
+     !direct = direct * f_att_d
+     !diffuse = diffuse * f_att_s + direct * f_prod_s
       spectrum = direct + diffuse
 
 
