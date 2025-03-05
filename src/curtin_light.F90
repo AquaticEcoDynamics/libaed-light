@@ -1,6 +1,6 @@
 #include "aed.h"
 
-! I refer to the contents of file Direct_Diffuse_Notes.pdf whose title is: 
+! I refer to the contents of file Direct_Diffuse_Notes.pdf whose title is:
 !"Technical note on direct and diffuse surface spectral
 !   vector irradiance above air-sea interface for Cockburn Sound"
 !
@@ -56,7 +56,7 @@ SUBROUTINE direct_diffuse_bands(SWFlux, thetarad, yearday, met, nlambda, lambda_
    AED_REAL, DIMENSION(nlambda_5nm_astm)  :: direct_5nm, diffuse_5nm, rindex, value
    TYPE(AED_REAL)                         :: thetadeg, uv, par, r1, r2, w
    AED_REAL, DIMENSION(nlambda)           :: rindex_beg, rindex_end
- 
+
 !------------------------------------------------------------------------------------
 !BEGIN
    ! theta is thetarad in degrees, because that is what I coded for in SUBROUTINE direct_diffuse_curtin()
@@ -106,7 +106,7 @@ SUBROUTINE direct_diffuse_bands(SWFlux, thetarad, yearday, met, nlambda, lambda_
       if(lambda_bounds(i+1)<283.0) then
         direct(i) = 0.0
         diffuse(i) = 0.0
-      endif 
+      endif
    end do
 END SUBROUTINE direct_diffuse_bands
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -136,7 +136,7 @@ SUBROUTINE direct_diffuse_curtin(SWFlux, MaxSWFlux, theta, day_of_year, met, dir
    AED_REAL, parameter :: MINSWFLUX = 0.1 ! [W/m2]
    ! Coefficients for solar zenith angle dependence from EcoLight (RADTRAN-X) simulations
    AED_REAL, DIMENSION(5, nlambda_curtin) :: ce, ci, cex, cix ! e is for direct, i is for diffuse
-   AED_REAL, DIMENSION(nlambda_curtin)    :: se, si, sex, six ! spectra 300nm-1um, x is for cloudy 
+   AED_REAL, DIMENSION(nlambda_curtin)    :: se, si, sex, six ! spectra 300nm-1um, x is for cloudy
    AED_REAL, DIMENSION(nlambda_5nm_astm)  :: se2, si2         ! spectra 300nm-4um
    AED_REAL, DIMENSION(nlambda_5nm_astm)  :: es, taug
    INTEGER                                :: i, i1, i2
@@ -170,8 +170,8 @@ SUBROUTINE direct_diffuse_curtin(SWFlux, MaxSWFlux, theta, day_of_year, met, dir
    muv(1) = 1.0
    do i = 2,ntheta_curtin
      muv(i) = muv(i-1) * mu
-   end do 
-   
+   end do
+
    ! se and si are direct and diffuse that, at mesh nodes, should closely match EcoLight simulations
 
    ! Need clear-sky values even for cloudy skies to use in estimating 1um-4um tail
@@ -212,7 +212,7 @@ SUBROUTINE direct_diffuse_curtin(SWFlux, MaxSWFlux, theta, day_of_year, met, dir
 
    ! If flux ratio so indicates, the 1um-4um tail needs to be for cloudy skies
    if (swflux_ratio < 0.98) then
-   
+
      ! Add 1um-4um cloudy-sky direct
      tranc = sex(140) / se(140)              ! slant path cloud transmittance tends to constant at 1um
      se2 = tranc * se2                       ! modify clear direct to get cloudy direct
@@ -372,41 +372,41 @@ END MODULE curtin_light
 ! of 19-22 + half 18 + half 23 BECAUSE band oasim_lambda(5) has ALREADY been aggregated
 ! BEFORE the method of computing PAR from oasim bands and weights is applied. I cannot
 ! un-mix this problem without choosing different multi-spectral band boundaries so that
-! UV and PAR boundaries do not split multi-spectral bands.   JED 19-Oct-2023 
-! 
+! UV and PAR boundaries do not split multi-spectral bands.   JED 19-Oct-2023
+!
 !
 !   i    lambda  par_weights   swr_weights    uv_weights    lambda_bounds
 !   -   -------  -----------   -----------    ----------    -------------
-!   1   250.000         0.00        4.1666        4.1666   300.00  304.16 
-!   2   325.000         0.00        33.333        33.333   304.16  337.50 
-!   3   350.000         0.00        25.000        25.000   337.50  362.50 
-!   4   375.000         0.00        25.000        25.000   362.50  387.50 
-!   5   400.000         12.5        25.000        12.500   387.50  412.50 
-!   6   425.000         25.0        25.000        0.0000   412.50  437.50 
-!   7   450.000         25.0        25.000        0.0000   437.50  462.50 
-!   8   475.000         25.0        25.000        0.0000   462.50  487.50 
-!   9   500.000         25.0        25.000        0.0000   487.50  512.50 
-!  10   525.000         25.0        25.000        0.0000   512.50  537.50 
-!  11   550.000         25.0        25.000        0.0000   537.50  562.50 
-!  12   575.000         25.0        25.000        0.0000   562.50  587.50 
-!  13   600.000         25.0        25.000        0.0000   587.50  612.50 
-!  14   625.000         25.0        25.000        0.0000   612.50  637.50 
-!  15   650.000         25.0        25.000        0.0000   637.50  662.50 
-!  16   675.000         25.0        25.000        0.0000   662.50  687.50 
-!  17   700.000         12.5        25.000        0.0000   687.50  712.50 
-!  18   725.000         0.00        37.500        0.0000   712.50  750.00 
-!  19   775.000         0.00        62.500        0.0000   750.00  812.50 
-!  20   850.000         0.00        87.500        0.0000   812.50  900.00 
-!  21   950.000         0.00        100.00        0.0000   900.00  1000.0 
-!  22   1050.00         0.00        100.00        0.0000   1000.0  1100.0 
-!  23   1150.00         0.00        100.00        0.0000   1100.0  1200.0 
-!  24   1250.00         0.00        100.00        0.0000   1200.0  1300.0 
-!  25   1350.00         0.00        100.00        0.0000   1300.0  1400.0 
-!  26   1450.00         0.00        100.00        0.0000   1400.0  1500.0 
-!  27   1550.00         0.00        100.00        0.0000   1500.0  1600.0 
-!  28   1650.00         0.00        100.00        0.0000   1600.0  1700.0 
-!  29   1750.00         0.00        125.00        0.0000   1700.0  1825.0 
-!  30   1900.00         0.00        225.00        0.0000   1825.0  2050.0 
-!  31   2200.00         0.00        500.00        0.0000   2050.0  2550.0 
-!  32   2900.00         0.00        750.00        0.0000   2550.0  3300.0 
-!  33   3700.00         0.00        700.00        0.0000   3300.0  4000.0 
+!   1   250.000         0.00        4.1666        4.1666   300.00  304.16
+!   2   325.000         0.00        33.333        33.333   304.16  337.50
+!   3   350.000         0.00        25.000        25.000   337.50  362.50
+!   4   375.000         0.00        25.000        25.000   362.50  387.50
+!   5   400.000         12.5        25.000        12.500   387.50  412.50
+!   6   425.000         25.0        25.000        0.0000   412.50  437.50
+!   7   450.000         25.0        25.000        0.0000   437.50  462.50
+!   8   475.000         25.0        25.000        0.0000   462.50  487.50
+!   9   500.000         25.0        25.000        0.0000   487.50  512.50
+!  10   525.000         25.0        25.000        0.0000   512.50  537.50
+!  11   550.000         25.0        25.000        0.0000   537.50  562.50
+!  12   575.000         25.0        25.000        0.0000   562.50  587.50
+!  13   600.000         25.0        25.000        0.0000   587.50  612.50
+!  14   625.000         25.0        25.000        0.0000   612.50  637.50
+!  15   650.000         25.0        25.000        0.0000   637.50  662.50
+!  16   675.000         25.0        25.000        0.0000   662.50  687.50
+!  17   700.000         12.5        25.000        0.0000   687.50  712.50
+!  18   725.000         0.00        37.500        0.0000   712.50  750.00
+!  19   775.000         0.00        62.500        0.0000   750.00  812.50
+!  20   850.000         0.00        87.500        0.0000   812.50  900.00
+!  21   950.000         0.00        100.00        0.0000   900.00  1000.0
+!  22   1050.00         0.00        100.00        0.0000   1000.0  1100.0
+!  23   1150.00         0.00        100.00        0.0000   1100.0  1200.0
+!  24   1250.00         0.00        100.00        0.0000   1200.0  1300.0
+!  25   1350.00         0.00        100.00        0.0000   1300.0  1400.0
+!  26   1450.00         0.00        100.00        0.0000   1400.0  1500.0
+!  27   1550.00         0.00        100.00        0.0000   1500.0  1600.0
+!  28   1650.00         0.00        100.00        0.0000   1600.0  1700.0
+!  29   1750.00         0.00        125.00        0.0000   1700.0  1825.0
+!  30   1900.00         0.00        225.00        0.0000   1825.0  2050.0
+!  31   2200.00         0.00        500.00        0.0000   2050.0  2550.0
+!  32   2900.00         0.00        750.00        0.0000   2550.0  3300.0
+!  33   3700.00         0.00        700.00        0.0000   3300.0  4000.0
