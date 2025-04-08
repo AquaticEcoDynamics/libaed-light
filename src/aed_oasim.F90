@@ -943,9 +943,9 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
                c_iop = _DIAG_VAR_S_(data%iops(i_iop)%id_c)    ! MAC_A
                a_eff = _DIAG_VAR_S_(data%iops(i_iop)%id_aeff) ! A_eff * sine_blade
                a_mac = data%iops(i_iop)%a * a_eff * c_iop      ! a * A_eff * sine_blade * MAC
-            ELSE 
+            ELSE
                c_iop = zero_ ; a_eff = zero_ ; a_mac = zero_
-            ENDIF            
+            ENDIF
          ENDIF
       ENDDO
 
@@ -976,7 +976,7 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
          ENDDO
       ENDIF
 
-      ! From top to centre of layer 
+      ! From top to centre of layer
       diffuse = diffuse * f_att_s + direct * f_prod_s  ! MH Reversed order of calc
       direct = direct * f_att_d
      !direct = direct * f_att_d
@@ -1015,7 +1015,7 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
          _DIAG_VAR_S_(data%iops(i_iop)%id_parc) = par_M ! Return PAR capture rate to linked group
       ENDIF
 
-      ! From centre to bottom of layer - for 2nd half of the layer 
+      ! From centre to bottom of layer - for 2nd half of the layer
       diffuse = diffuse * f_att_s + direct * f_prod_s  ! MH Reversed order of calc
       direct = direct * f_att_d
      !direct = direct * f_att_d
