@@ -26,6 +26,8 @@ MODULE curtin_light
 
 #include "oasim.inc"
 
+#define FLOAT(x) (x)
+
 !===============================================================================
 CONTAINS
 
@@ -68,7 +70,7 @@ SUBROUTINE direct_diffuse_bands(SWFlux, thetarad, yearday, met, nlambda, lambda_
    !   the OASIM or custom multi-spectral (also contiguous) bands.  How are you going to effieciently
    !   do the aggregation?  value and width dimensioned to 40+2 and zeroed in each loop
    !   of iband = 1, nlambda.  Why this dimension - the max size of any band aggregate 200nm
-   rindex = float(key)
+   rindex = FLOAT(key)
    call interp(nlambda_5nm_astm, lambda_5nm_astm - 2.5, rindex, nlambda, lambda_bounds(1:nlambda), rindex_beg)
    call interp(nlambda_5nm_astm, lambda_5nm_astm + 2.5, rindex, nlambda, lambda_bounds(2:nlambda+1), rindex_end)
    ! Initialise the multi-spectral direct & diffuse output vectors
@@ -275,7 +277,7 @@ AED_REAL, parameter :: xr = 4000.0     !   estimates, so just hard-code them in.
    lambda_bounds = -999.9
    ALLOCATE(x(nlambda), tx(nlambda))
    do i = 1,nlambda
-     x(i) = float(i)
+     x(i) = FLOAT(i)
      tx(i) = x(i) - 0.5
    end do
    call interp(nlambda, x, lambda, nlambda+1, tx, lambda_bounds(1:nlambda))
