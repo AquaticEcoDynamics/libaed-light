@@ -5,7 +5,7 @@
 	</Platforms>
 	<Configurations>
 		<Configuration Name="Debug|x64" UseCompiler="ifortCompiler" OutputDirectory="$(SolutionDir)\$(PlatformName)-$(ConfigurationName)" IntermediateDirectory="$(SolutionDir)\$(PlatformName)-$(ConfigurationName)\$(ProjectName)" ConfigurationType="typeStaticLibrary">
-			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\src\;..\include\;.\$(PlatformName)-$(ConfigurationName)\;..\..\libaed-water\include\;..\..\libaed-water\mod\" F2003Semantics="true" WarnInterfaces="true" RealKIND="realKIND8" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\src\;..\include\;.\$(PlatformName)-$(ConfigurationName)\;..\..\libaed-water\include\" F2003Semantics="true" WarnInterfaces="true" RealKIND="realKIND8" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
 			<Tool Name="VFLibrarianTool"/>
 			<Tool Name="VFResourceCompilerTool"/>
 			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
@@ -15,7 +15,7 @@
 			<Tool Name="VFPostBuildEventTool"/>
 		</Configuration>
 		<Configuration Name="Release|x64" UseCompiler="ifortCompiler" OutputDirectory="$(SolutionDir)\$(PlatformName)-$(ConfigurationName)" IntermediateDirectory="$(SolutionDir)\$(PlatformName)-$(ConfigurationName)\$(ProjectName)" ConfigurationType="typeStaticLibrary">
-			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\src\;..\include\;.\$(PlatformName)-$(ConfigurationName)\;..\..\libaed-water\include\;..\..\libaed-water\mod\" F2003Semantics="true" RealKIND="realKIND8"/>
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\src\;..\include\;.\$(PlatformName)-$(ConfigurationName)\;..\..\libaed-water\include\" F2003Semantics="true" RealKIND="realKIND8"/>
 			<Tool Name="VFLibrarianTool"/>
 			<Tool Name="VFResourceCompilerTool"/>
 			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
