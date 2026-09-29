@@ -38,7 +38,6 @@ OBJS=${objdir}/aed_maths.o      \
      ${objdir}/aed_slingo.o     \
      ${objdir}/curtin_light.o   \
      ${objdir}/aed_oasim.o      \
-     ${objdir}/aed_light.o      \
      ${objdir}/aed_lighting.o
 
 include ../libaed-water/make_rules.inc

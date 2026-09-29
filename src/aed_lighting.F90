@@ -38,7 +38,6 @@ MODULE aed_lighting
 !-------------------------------------------------------------------------------
    USE aed_core, ONLY : aed_model_data_t
 
-   USE aed_light
    USE aed_atmosphere
    USE aed_oasim
 
@@ -72,7 +71,6 @@ FUNCTION aed_new_lgt_model(modelname) RESULT(model)
    NULLIFY(model)
 
    SELECT CASE (modelname)
-      CASE ('aed_light');          prefix = 'LGT'; ALLOCATE(aed_light_data_t::model)
       CASE ('aed_atmosphere');     prefix = 'ATM'; ALLOCATE(aed_atmosphere_data_t::model)
       CASE ('aed_oasim');          prefix = 'OAS'; ALLOCATE(aed_oasim_data_t::model)
    END SELECT
