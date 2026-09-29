@@ -33,11 +33,10 @@ INCLUDES=-I../libaed-water/${incdir}  -I../libaed-water/${moddir}
 
 include ../libaed-water/make_defs.inc
 
-OBJS=${objdir}/aed_maths.o      \
-     ${objdir}/aed_atmosphere.o \
-     ${objdir}/aed_slingo.o     \
-     ${objdir}/curtin_light.o   \
-     ${objdir}/aed_oasim.o      \
+OBJS=${objdir}/aed_light_tables.o \
+     ${objdir}/aed_light_utils.o  \
+     ${objdir}/aed_atmosphere.o   \
+     ${objdir}/aed_oasim.o        \
      ${objdir}/aed_lighting.o
 
 include ../libaed-water/make_rules.inc

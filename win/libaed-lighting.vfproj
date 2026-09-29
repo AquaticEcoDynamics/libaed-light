@@ -30,11 +30,10 @@
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
 			<File RelativePath="..\src\aed_atmosphere.F90"/>
+			<File RelativePath="..\src\aed_light_tables.F90"/>
+			<File RelativePath="..\src\aed_light_utils.F90"/>
 			<File RelativePath="..\src\aed_lighting.F90"/>
-			<File RelativePath="..\src\aed_maths.F90"/>
 			<File RelativePath="..\src\aed_oasim.F90"/>
-			<File RelativePath="..\src\aed_slingo.F90"/>
-			<File RelativePath="..\src\curtin_light.F90"/>
 		</Filter>
 	</Files>
 	<Globals/>
