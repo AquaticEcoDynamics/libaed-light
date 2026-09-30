@@ -116,7 +116,7 @@ SUBROUTINE aed_define_light(data, namlst)
 
    ! Read the namelist
    read(namlst,nml=aed_light,iostat=status)
-   IF (status /= 0) STOP 'Error reading namelist aed_light'
+   IF (status /= 0) ERROR STOP 'Error reading namelist aed_light'
 
    data%outputLight = outputLight
    IF (data%outputLight) THEN
