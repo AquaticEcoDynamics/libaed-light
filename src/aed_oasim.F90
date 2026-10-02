@@ -100,6 +100,7 @@ MODULE aed_oasim
       INTEGER :: id_lon, id_lat, id_cloud, id_wind_speed, id_airpres, id_relhum
       INTEGER :: id_lwp, id_O3, id_WV, id_mean_wind_speed, id_visibility, id_air_mass_type
       INTEGER :: id_yearday, id_doy, id_swflux, id_hr_peakz, id_hr_peakx
+      INTEGER :: id_peak_zen, id_peak_flux
       INTEGER :: id_h
       INTEGER :: id_I_0
       INTEGER :: nlambda
@@ -457,8 +458,15 @@ SUBROUTINE aed_define_oasim(data, namlst)
      data%id_zen =        aed_define_sheet_diag_variable('zen'    ,'degrees', 'zenith angle')
      data%id_doy =        aed_define_sheet_diag_variable('yearday','-', 'day of year')
      data%id_swflux =     aed_define_sheet_diag_variable('swflux' ,'-', 'swflux from host')
-     data%id_hr_peakz =   aed_define_sheet_diag_variable('hr_peak_zen' ,'-', 'time of peak zenith')
-     data%id_hr_peakx =   aed_define_sheet_diag_variable('hr_peak_flux' ,'-', 'time of peak zenith')
+     data%id_hr_peakz =   aed_define_sheet_diag_variable('hr_peak_zen' ,'hour',  &
+                             'time of minimum zenith angle', rezero=.FALSE.)
+     data%id_hr_peakx =   aed_define_sheet_diag_variable('hr_peak_flux' ,'hour', &
+                             'time of peak swflux', rezero=.FALSE.)
+     !# running daily extremes behind the two times above (not output)
+     data%id_peak_zen =   aed_define_sheet_diag_variable('peak_zen' ,'degrees', &
+                             'daily minimum zenith angle so far', rezero=.FALSE., output=.FALSE.)
+     data%id_peak_flux =  aed_define_sheet_diag_variable('peak_flux' ,'-',       &
+                             'daily maximum swflux so far', rezero=.FALSE., output=.FALSE.)
    ENDIF
 
    IF (sky_model == 1) THEN
@@ -726,15 +734,22 @@ SUBROUTINE aed_calculate_column_oasim(data,column,layer_map)
       _DIAG_VAR_S_(data%id_swflux) = SWFLUX
       _DIAG_VAR_S_(data%id_zen) = rad2deg * theta
       _DIAG_VAR_S_(data%id_doy) = yearday
-      ! Special diagnostics for tracking time of day solar peak occurs
+      ! Special diagnostics for tracking time of day solar peak occurs:
+      ! the (local) hour of minimum zenith and of maximum host swflux.
+      ! The running extremes reset in the first hour of each day; the
+      ! hours hold their last value until the new day's peak passes them.
       IF( mod(yearday, 1.0) * 24.0 < 1. ) THEN
-         _DIAG_VAR_S_(data%id_hr_peakz) =  90.
-         _DIAG_VAR_S_(data%id_hr_peakx) =  0.
+         _DIAG_VAR_S_(data%id_peak_zen)  = 90.
+         _DIAG_VAR_S_(data%id_peak_flux) = 0.
       ENDIF
-      IF( _DIAG_VAR_S_(data%id_zen) < _DIAG_VAR_S_(data%id_hr_peakz) ) &
-        _DIAG_VAR_S_(data%id_hr_peakz) = _DIAG_VAR_S_(data%id_zen) !mod(yearday, 1.0) * 24.0
-      IF( SWFLUX > _DIAG_VAR_S_(data%id_hr_peakx) ) &
-        _DIAG_VAR_S_(data%id_hr_peakx) = _DIAG_VAR_S_(data%id_hr_peakx) !mod(yearday, 1.0) * 24.0
+      IF( _DIAG_VAR_S_(data%id_zen) < _DIAG_VAR_S_(data%id_peak_zen) ) THEN
+        _DIAG_VAR_S_(data%id_peak_zen) = _DIAG_VAR_S_(data%id_zen)
+        _DIAG_VAR_S_(data%id_hr_peakz) = mod(yearday, 1.0) * 24.0
+      ENDIF
+      IF( SWFLUX > _DIAG_VAR_S_(data%id_peak_flux) ) THEN
+        _DIAG_VAR_S_(data%id_peak_flux) = SWFLUX
+        _DIAG_VAR_S_(data%id_hr_peakx) = mod(yearday, 1.0) * 24.0
+      ENDIF
    ENDIF
 
    !-------------------------------------------------------------------------------
